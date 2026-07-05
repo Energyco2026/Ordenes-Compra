@@ -227,9 +227,9 @@
     referencia: params.get('referencia') || 'Solicitud Compras - Estructuras Ampliación PO 1898 Siglo 21',
     proveedor: params.get('proveedor') || 'VATIO PICO',
     comentariosCompras: params.get('comentariosCompras') || 'Se adjunta orden de compra para su revisión y aprobación.',
-    docNombre: params.get('docNombre') || 'orden_de_compra_PO1898.pdf'
+    docNombre: params.get('docNombre') || 'orden_de_compra_PO1898.pdf',
+    docUrl: params.get('docUrl') || ''
   };
-  docUrl: params.get('docUrl') || ''
 
   document.getElementById('rSolicitante').textContent = datos.solicitante;
   document.getElementById('rDivision').textContent = datos.division;
