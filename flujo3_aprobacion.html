@@ -229,6 +229,7 @@
     comentariosCompras: params.get('comentariosCompras') || 'Se adjunta orden de compra para su revisión y aprobación.',
     docNombre: params.get('docNombre') || 'orden_de_compra_PO1898.pdf'
   };
+  docUrl: params.get('docUrl') || ''
 
   document.getElementById('rSolicitante').textContent = datos.solicitante;
   document.getElementById('rDivision').textContent = datos.division;
@@ -242,7 +243,11 @@
   document.getElementById('docName').textContent = datos.docNombre;
 
   document.getElementById('btnVerDoc').addEventListener('click', () => {
-    alert('En producción, esto abre el documento guardado en SharePoint. (Demo: ' + datos.docNombre + ')');
+    if (datos.docUrl) {
+      window.open(datos.docUrl, '_blank');
+    } else {
+      alert('No se encontró el enlace del documento.');
+    }
   });
 
   // --- Toggle visual del botón según decisión ---
