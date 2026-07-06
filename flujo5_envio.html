@@ -169,7 +169,7 @@
   const CLAVE_SISTEMA = "y-1s4NVy6FMgR7HvpxbwVbP7puLo8KlP"; // debe coincidir con la que revisa el flujo de Power Automate
 
   const params = new URLSearchParams(window.location.search);
-  const datos = {
+ const datos = {
     convId: params.get('convId') || 'SOL-20260703-DEMO1',
     proyecto: params.get('proyecto') || 'PO 1898',
     proveedor: params.get('proveedor') || 'VATIO PICO',
@@ -192,8 +192,6 @@
       alert('No se encontró el enlace del documento.');
     }
   });
-    alert('En producción, esto abre el documento guardado en SharePoint. (Demo: ' + datos.docNombre + ')');
-  });
 
   const form = document.getElementById('formEnvio');
   const btn = document.getElementById('btnEnviar');
@@ -206,7 +204,6 @@
     btn.textContent = "Confirmando...";
 
     const ahora = new Date();
-   const ahora = new Date();
     const payload = {
       clave: CLAVE_SISTEMA,
       etapa: "envio_proveedor",
@@ -215,6 +212,7 @@
       horaEnvioProveedor: ahora.toLocaleTimeString('es-EC'),
       nota: document.getElementById('notaEnvio').value
     };
+
     try {
       if (POWER_AUTOMATE_URL && POWER_AUTOMATE_URL.startsWith('http')) {
         const resp = await fetch(POWER_AUTOMATE_URL, {
