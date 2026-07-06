@@ -203,7 +203,8 @@
     categoria: params.get('categoria') || 'Urgente',
     referencia: params.get('referencia') || 'Solicitud Compras - Estructuras Ampliación PO 1898 Siglo 21',
     proveedorSugerido: params.get('proveedorSugerido') || '',
-    docReferenciaNombre: params.get('docReferenciaNombre') || ''
+    docReferenciaNombre: params.get('docReferenciaNombre') || '',
+    docRefUrl: params.get('docRefUrl') || ''
   };
 
   document.getElementById('rSolicitante').textContent = datosSolicitud.solicitante;
@@ -221,7 +222,11 @@
     document.getElementById('docRefName').textContent = datosSolicitud.docReferenciaNombre;
   }
   document.getElementById('btnVerDocRef').addEventListener('click', () => {
-    alert('En producción, esto abre el documento de referencia guardado en SharePoint. (Demo: ' + datosSolicitud.docReferenciaNombre + ')');
+    if (datosSolicitud.docRefUrl) {
+      window.open(datosSolicitud.docRefUrl, '_blank');
+    } else {
+      alert('No se encontró el enlace al documento de referencia.');
+    }
   });
   const catEl = document.getElementById('rCategoria');
   catEl.textContent = datosSolicitud.categoria;
