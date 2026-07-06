@@ -175,9 +175,9 @@
     proveedor: params.get('proveedor') || 'VATIO PICO',
     aprobador: params.get('aprobador') || 'Jorge Inga',
     referencia: params.get('referencia') || 'Solicitud Compras - Estructuras Ampliación PO 1898 Siglo 21',
-    docNombre: params.get('docNombre') || 'orden_de_compra_PO1898.pdf'
+    docNombre: params.get('docNombre') || 'orden_de_compra_PO1898.pdf',
+    docUrl: params.get('docUrl') || ''
   };
-
   document.getElementById('rProyecto').textContent = datos.proyecto;
   document.getElementById('rProveedor').textContent = datos.proveedor;
   document.getElementById('rAprobador').textContent = datos.aprobador;
@@ -186,6 +186,12 @@
   document.getElementById('folderName').textContent = 'Proyectos / ' + datos.proyecto + ' / Órdenes de Compra';
 
   document.getElementById('btnVerDoc').addEventListener('click', () => {
+    if (datos.docUrl) {
+      window.open(datos.docUrl, '_blank');
+    } else {
+      alert('No se encontró el enlace del documento.');
+    }
+  });
     alert('En producción, esto abre el documento guardado en SharePoint. (Demo: ' + datos.docNombre + ')');
   });
 
@@ -200,17 +206,14 @@
     btn.textContent = "Confirmando...";
 
     const ahora = new Date();
-   const payload = {
+   const ahora = new Date();
+    const payload = {
       clave: CLAVE_SISTEMA,
-      etapa: "aprobacion",
+      etapa: "envio_proveedor",
       convId: datos.convId,
-      estado: decision,
-      aprobadoPor: aprobadorOpt.value,
-      nombreAprobador: aprobadorOpt.dataset.nombre,
-      fechaAprobacion: ahora.toLocaleDateString('es-EC'),
-      horaAprobacion: ahora.toLocaleTimeString('es-EC'),
-      comentariosAprobacion: comentariosInput.value,
-      docUrl: datos.docUrl
+      fechaEnvioProveedor: ahora.toLocaleDateString('es-EC'),
+      horaEnvioProveedor: ahora.toLocaleTimeString('es-EC'),
+      nota: document.getElementById('notaEnvio').value
     };
     try {
       if (POWER_AUTOMATE_URL && POWER_AUTOMATE_URL.startsWith('http')) {
