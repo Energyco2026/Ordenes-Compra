@@ -281,7 +281,7 @@
 
     const ahora = new Date();
     const aprobadorOpt = selectAprobador.selectedOptions[0];
-    const payload = {
+   const payload = {
       clave: CLAVE_SISTEMA,
       etapa: "aprobacion",
       convId: datos.convId,
@@ -290,7 +290,8 @@
       nombreAprobador: aprobadorOpt.dataset.nombre,
       fechaAprobacion: ahora.toLocaleDateString('es-EC'),
       horaAprobacion: ahora.toLocaleTimeString('es-EC'),
-      comentariosAprobacion: comentariosInput.value
+      comentariosAprobacion: comentariosInput.value,
+      docUrl: datos.docUrl
     };
 
     try {
