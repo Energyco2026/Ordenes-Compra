@@ -281,7 +281,7 @@
 
     const ahora = new Date();
     const aprobadorOpt = selectAprobador.selectedOptions[0];
-   const payload = {
+  const payload = {
       clave: CLAVE_SISTEMA,
       etapa: "aprobacion",
       convId: datos.convId,
@@ -293,7 +293,6 @@
       comentariosAprobacion: comentariosInput.value,
       docUrl: datos.docUrl
     };
-
     try {
       if (POWER_AUTOMATE_URL && POWER_AUTOMATE_URL.startsWith('http')) {
         const resp = await fetch(POWER_AUTOMATE_URL, {
