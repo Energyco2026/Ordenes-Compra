@@ -200,15 +200,18 @@
     btn.textContent = "Confirmando...";
 
     const ahora = new Date();
-    const payload = {
+   const payload = {
       clave: CLAVE_SISTEMA,
-      etapa: "envio_proveedor",
+      etapa: "aprobacion",
       convId: datos.convId,
-      fechaEnvioProveedor: ahora.toLocaleDateString('es-EC'),
-      horaEnvioProveedor: ahora.toLocaleTimeString('es-EC'),
-      nota: document.getElementById('notaEnvio').value
+      estado: decision,
+      aprobadoPor: aprobadorOpt.value,
+      nombreAprobador: aprobadorOpt.dataset.nombre,
+      fechaAprobacion: ahora.toLocaleDateString('es-EC'),
+      horaAprobacion: ahora.toLocaleTimeString('es-EC'),
+      comentariosAprobacion: comentariosInput.value,
+      docUrl: datos.docUrl
     };
-
     try {
       if (POWER_AUTOMATE_URL && POWER_AUTOMATE_URL.startsWith('http')) {
         const resp = await fetch(POWER_AUTOMATE_URL, {
