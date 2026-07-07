@@ -3,129 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Solicitud de Compras · ENERGYCONTROL</title>
+<title>Cotización de Compra · ENERGYCONTROL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #1F3864;
-    --navy-deep: #14264a;
-    --green: #6F9A35;
-    --green-deep: #587D29;
-    --paper: #F7F8F5;
-    --line: #DDE2D8;
-    --ink: #1C2321;
-    --ink-soft: #5B6460;
-    --danger: #B3401F;
+    --navy: #1F3864; --navy-deep: #14264a; --green: #6F9A35; --green-deep: #587D29;
+    --paper: #F7F8F5; --line: #DDE2D8; --ink: #1C2321; --ink-soft: #5B6460; --danger: #B3401F;
     --radius: 10px;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Inter', sans-serif;
-    display: flex;
-    justify-content: center;
-    padding: 32px 16px 64px;
-  }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 32px 16px 64px; }
   .sheet { width: 100%; max-width: 560px; }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 28px;
-  }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
   .brand img, .brand svg { height: 40px; width: auto; display: block; }
-  .brand-sub {
-    font-size: 11px;
-    color: var(--ink-soft);
-    letter-spacing: 0.03em;
-    border-left: 2px solid var(--line);
-    padding-left: 12px;
-    line-height: 1.4;
-  }
+  .brand-sub { font-size: 11px; color: var(--ink-soft); letter-spacing: 0.03em; border-left: 2px solid var(--line); padding-left: 12px; line-height: 1.4; }
   .process { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
   .process-step { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
   .process-step.active { background: var(--green); }
-  .process-label {
-    font-size: 11px; font-weight: 600; color: var(--ink-soft);
-    letter-spacing: 0.08em; text-transform: uppercase;
-    margin-bottom: 18px; display: block;
+  .process-label { font-size: 11px; font-weight: 600; color: var(--ink-soft); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px; display: block; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 600; color: var(--navy-deep); margin: 0 0 4px; letter-spacing: -0.01em; }
+  .lede { font-size: 14px; color: var(--ink-soft); margin: 0 0 20px; line-height: 1.5; }
+  /* --- Solicitud original: card resumen de solo lectura --- */
+  .resumen {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 20px;
   }
-  h1 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 26px; font-weight: 600; color: var(--navy-deep);
-    margin: 0 0 4px; letter-spacing: -0.01em;
+  .resumen-eyebrow {
+    font-size: 10.5px; font-weight: 700; color: var(--green-deep);
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; display: block;
   }
-  .lede { font-size: 14px; color: var(--ink-soft); margin: 0 0 28px; line-height: 1.5; }
-  form {
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 24px;
-  }
+  .resumen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-bottom: 12px; }
+  .resumen-item .k { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  .resumen-item .v { font-size: 13.5px; font-weight: 600; color: var(--navy-deep); }
+  .resumen-desc { border-top: 1px solid var(--line); padding-top: 12px; }
+  .resumen-desc .k { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+  .resumen-desc .v { font-size: 13.5px; color: var(--ink); line-height: 1.5; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge.normal { background: #E7ECF3; color: var(--navy-deep); }
+  .badge.urgente { background: #FBEFE4; color: #A85B1F; }
+  .badge.critica { background: #F7E4DE; color: var(--danger); }
+  .doc-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .doc-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--paper); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--navy); }
+  .doc-icon svg { width: 18px; height: 18px; }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-info .name { font-size: 13px; font-weight: 600; color: var(--navy-deep); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-info .sub { font-size: 11px; color: var(--ink-soft); }
+  .doc-view { flex-shrink: 0; padding: 8px 14px; border-radius: 6px; background: var(--navy); color: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; }
+  form { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
   .field { margin-bottom: 18px; }
   .field:last-of-type { margin-bottom: 0; }
-  label {
-    display: block; font-size: 12.5px; font-weight: 600;
-    color: var(--navy-deep); margin-bottom: 6px;
-  }
+  label { display: block; font-size: 12.5px; font-weight: 600; color: var(--navy-deep); margin-bottom: 6px; }
   label .opt { font-weight: 400; color: var(--ink-soft); text-transform: none; }
-  input, select, textarea {
-    width: 100%; padding: 11px 12px;
-    border: 1px solid var(--line); border-radius: 7px;
-    font-family: 'Inter', sans-serif; font-size: 14.5px;
-    color: var(--ink); background: var(--paper);
-    transition: border-color .15s ease, background .15s ease;
+  input, textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 7px; font-family: 'Inter', sans-serif; font-size: 14.5px; color: var(--ink); background: var(--paper); transition: border-color .15s ease, background .15s ease; }
+  textarea { resize: vertical; min-height: 90px; }
+  input:focus, textarea:focus { outline: none; border-color: var(--navy); background: #fff; }
+  /* --- Upload de archivo --- */
+  .dropzone {
+    border: 1.5px dashed var(--line); border-radius: 9px; background: var(--paper);
+    padding: 22px 16px; text-align: center; cursor: pointer; transition: border-color .15s ease, background .15s ease;
   }
-  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%235B6460' stroke-width='1.6' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
-  textarea { resize: vertical; min-height: 72px; }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--navy); background: #fff; }
-  input[readonly] { background: var(--line); color: var(--ink-soft); cursor: not-allowed; }
-  .row2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
-  .chip-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .chip-group.chip-group-2 { grid-template-columns: repeat(2, 1fr); }
-  .chip-opt { position: relative; }
-  .chip-opt input { position: absolute; opacity: 0; inset: 0; cursor: pointer; width: 100%; height: 100%; }
-  .chip-opt span {
-    display: block; text-align: center; padding: 10px 6px;
-    border: 1px solid var(--line); border-radius: 7px;
-    font-size: 13px; font-weight: 600; color: var(--ink-soft); background: var(--paper);
-  }
-  .chip-opt span small { display: block; font-size: 10.5px; font-weight: 500; margin-top: 2px; opacity: .85; }
-  .chip-opt input:checked + span { border-color: var(--navy); background: var(--navy); color: #fff; }
-  .chip-opt[data-level="critica"] input:checked + span { border-color: var(--danger); background: var(--danger); }
-  .dropzone { border: 1.5px dashed var(--line); border-radius: 9px; background: var(--paper); padding: 18px 16px; text-align: center; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
   .dropzone:hover, .dropzone.drag { border-color: var(--navy); background: #EFF2F6; }
   .dropzone input[type=file] { display: none; }
-  .dropzone .icon { width: 26px; height: 26px; margin: 0 auto 6px; color: var(--navy); }
-  .dropzone .txt { font-size: 12.5px; color: var(--ink-soft); }
+  .dropzone .icon { width: 30px; height: 30px; margin: 0 auto 8px; color: var(--navy); }
+  .dropzone .txt { font-size: 13px; color: var(--ink-soft); }
   .dropzone .txt b { color: var(--navy-deep); }
-  .file-chip { display: none; align-items: center; gap: 10px; margin-top: 10px; background: var(--paper); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; }
+  .file-chip {
+    display: none; align-items: center; gap: 10px; margin-top: 10px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px;
+  }
   .file-chip.show { display: flex; }
   .file-chip .fname { font-size: 13px; font-weight: 600; color: var(--navy-deep); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .file-chip .fsize { font-size: 11.5px; color: var(--ink-soft); }
   .file-chip .remove { cursor: pointer; color: var(--danger); font-size: 12px; font-weight: 700; }
-  button[type="submit"] {
-    width: 100%; margin-top: 24px; padding: 14px; border: none; border-radius: 7px;
-    background: var(--navy); color: #fff;
-    font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600;
-    cursor: pointer; transition: background .15s ease;
-  }
+  button[type="submit"] { width: 100%; margin-top: 24px; padding: 14px; border: none; border-radius: 7px; background: var(--navy); color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s ease; }
   button[type="submit"]:hover { background: var(--navy-deep); }
   button[type="submit"]:disabled { background: #9aa5b5; cursor: not-allowed; }
   .hint { font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; text-align: center; }
   .success { display: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 40px 28px; text-align: center; }
   .success.show { display: block; }
-  form.hidden { display: none; }
+  form.hidden, .resumen.hidden { display: none; }
   .success-icon { width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; }
   .success-icon svg { width: 22px; height: 22px; }
   .success h2 { font-family: 'Space Grotesk', sans-serif; font-size: 19px; color: var(--navy-deep); margin: 0 0 6px; }
   .success p { font-size: 13.5px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
   .success .convid { display: inline-block; margin-top: 14px; padding: 6px 12px; background: var(--paper); border-radius: 6px; font-family: monospace; font-size: 12.5px; color: var(--navy-deep); }
-  .otro-wrap { margin-top: 8px; display: none; }
-  .otro-wrap.show { display: block; }
 </style>
 </head>
 <body>
@@ -144,155 +106,81 @@
     <img id="logoImg" alt="ENERGYCONTROL" style="display:none;">
     <div class="brand-sub">Sistema de<br>órdenes de compra</div>
   </div>
-  <span class="process-label">Flujo 1 de 5 · Solicitud</span>
+  <span class="process-label">Flujo 2 de 5 · Cotización</span>
   <div class="process">
+    <div class="process-step active"></div>
     <div class="process-step active"></div>
     <div class="process-step"></div>
     <div class="process-step"></div>
     <div class="process-step"></div>
-    <div class="process-step"></div>
   </div>
-  <h1>Solicitud de compras</h1>
-  <p class="lede">Completa estos datos y Compras generará tu orden de inmediato.</p>
-  <form id="formSolicitud">
-    <div class="field">
-      <label for="solicitante">Solicitante</label>
-      <select id="solicitante" name="solicitante" required>
-        <option value="" disabled selected>Selecciona tu nombre</option>
-      </select>
+  <h1>Cotizar solicitud</h1>
+  <p class="lede">Revisa lo solicitado y adjunta la orden de compra con el proveedor cotizado.</p>
+  <div class="resumen" id="resumen">
+    <span class="resumen-eyebrow">Solicitud original</span>
+    <div class="resumen-grid">
+      <div class="resumen-item"><div class="k">Solicitante</div><div class="v" id="rSolicitante">—</div></div>
+      <div class="resumen-item"><div class="k">Departamento</div><div class="v" id="rDivision">—</div></div>
+      <div class="resumen-item"><div class="k">Tipo</div><div class="v" id="rTipo">—</div></div>
+      <div class="resumen-item"><div class="k">Categoría</div><div class="v"><span class="badge" id="rCategoria">—</span></div></div>
     </div>
-    <div class="row2 field">
-      <div>
-        <label for="tipo">Tipo</label>
-        <select id="tipo" name="tipo" required>
-          <option value="" disabled selected>Selecciona</option>
-          <option value="Local">Local</option>
-          <option value="Internacional">Internacional</option>
-        </select>
+    <div class="resumen-desc">
+      <div class="k">Descripción</div>
+      <div class="v" id="rReferencia">—</div>
+    </div>
+    <div class="resumen-desc" id="rProveedorSugeridoWrap" style="display:none;">
+      <div class="k">Proveedor sugerido por el solicitante</div>
+      <div class="v" id="rProveedorSugerido">—</div>
+    </div>
+    <div class="doc-row" id="docRefRow" style="display:none;">
+      <div class="doc-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"/><path d="M14 3v5h5"/></svg>
       </div>
-      <div>
-        <label for="division">Departamento</label>
-        <input type="text" id="division" name="division" readonly required placeholder="Se autocompleta">
+      <div class="doc-info">
+        <div class="name" id="docRefName">—</div>
+        <div class="sub">Cotización de referencia del solicitante</div>
       </div>
+      <button type="button" class="doc-view" id="btnVerDocRef">Ver documento</button>
+    </div>
+  </div>
+  <form id="formCotizacion">
+    <div class="field">
+      <label for="proveedor">Proveedor</label>
+      <input type="text" id="proveedor" name="proveedor" placeholder="Nombre del proveedor cotizado" required>
     </div>
     <div class="field">
-      <label for="condicionesPago">Condiciones de pago propuestas</label>
-      <select id="condicionesPago" name="condicionesPago" required>
-        <option value="" disabled selected>Selecciona</option>
-        <option value="Contado">Contado</option>
-        <option value="15 días">15 días</option>
-        <option value="30 días">30 días</option>
-        <option value="45 días">45 días</option>
-        <option value="60 días">60 días</option>
-        <option value="90 días">90 días</option>
-        <option value="50% anticipo - 50% contra entrega">50% anticipo - 50% contra entrega</option>
-        <option value="70% anticipo - 30% contra entrega">70% anticipo - 30% contra entrega</option>
-        <option value="Crédito directo con proveedor">Crédito directo con proveedor</option>
-        <option value="Negociadas">Negociadas</option>
-        <option value="No definida aún">No definida aún</option>
-        <option value="Otro">Otro</option>
-      </select>
-      <div class="otro-wrap" id="condicionesOtroWrap">
-        <input type="text" id="condicionesOtro" placeholder="Especifica las condiciones">
-      </div>
+      <label for="comentarios">Comentarios para el administrador</label>
+      <textarea id="comentarios" name="comentarios" placeholder="Ej. Se adjunta orden de compra para su revisión y aprobación..." required></textarea>
     </div>
     <div class="field">
-      <label for="referencia">Asunto de la orden</label>
-      <textarea id="referencia" name="referencia" placeholder="Ej. Solicitud Compras - Alquiler de baños portátiles PO1727" required></textarea>
-    </div>
-    <div class="field">
-      <label>¿Aplica número de PO?</label>
-      <div class="chip-group chip-group-2">
-        <label class="chip-opt">
-          <input type="radio" name="pedidoAplica" value="Si" id="pedidoAplicaSi">
-          <span>Sí aplica</span>
-        </label>
-        <label class="chip-opt">
-          <input type="radio" name="pedidoAplica" value="No" id="pedidoAplicaNo" checked>
-          <span>No aplica</span>
-        </label>
-      </div>
-    </div>
-    <div class="field" id="pedidoWrapSi" style="display:none;">
-      <label for="pedido">Número de PO</label>
-      <input type="text" id="pedido" name="pedido" placeholder="Ej. PO1727, OFV25-00019314...">
-    </div>
-    <div class="field" id="pedidoWrapNo">
-      <label for="motivo">Motivo</label>
-      <input type="text" id="motivo" name="motivo" placeholder="Ej. Administración, Stock...">
-    </div>
-    <div class="field">
-      <label for="proveedorSugerido">Proveedor</label>
-      <input type="text" id="proveedorSugerido" name="proveedorSugerido" placeholder="Nombre del proveedor" required>
-    </div>
-    <div class="field">
-      <label>Cotización de referencia (PDF, Excel, Word o JPG)</label>
-      <div class="dropzone" id="dropzoneRef">
+      <label>Orden de compra (archivo)</label>
+      <div class="dropzone" id="dropzone">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 15V3m0 0L7 8m5-5l5 5M4 17v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
-        <div class="txt"><b>Toca para subir</b> o arrastra el archivo aquí</div>
-        <input type="file" id="fileInputRef" accept=".pdf,.xls,.xlsx,.doc,.docx,.jpg,.jpeg">
+        <div class="txt"><b>Toca para subir</b> o arrastra el archivo aquí<br>PDF o Word</div>
+        <input type="file" id="fileInput" accept=".pdf,.doc,.docx">
       </div>
-      <div class="file-chip" id="fileChipRef">
-        <span class="fname" id="fileNameRef"></span>
-        <span class="fsize" id="fileSizeRef"></span>
-        <span class="remove" id="fileRemoveRef">Quitar</span>
-      </div>
-    </div>
-    <div class="field">
-      <label>Categoría</label>
-      <div class="chip-group">
-        <label class="chip-opt" data-level="normal">
-          <input type="radio" name="categoria" value="Normal" checked>
-          <span>Normal<small>48 h</small></span>
-        </label>
-        <label class="chip-opt" data-level="urgente">
-          <input type="radio" name="categoria" value="Urgente">
-          <span>Urgente<small>24 h</small></span>
-        </label>
-        <label class="chip-opt" data-level="critica">
-          <input type="radio" name="categoria" value="Crítica">
-          <span>Crítica<small>Inmediata</small></span>
-        </label>
+      <div class="file-chip" id="fileChip">
+        <span class="fname" id="fileName"></span>
+        <span class="fsize" id="fileSize"></span>
+        <span class="remove" id="fileRemove">Quitar</span>
       </div>
     </div>
-    <div class="field">
-      <label for="lugarEntrega">Dónde entregar la mercadería</label>
-      <input type="text" id="lugarEntrega" name="lugarEntrega" placeholder="Ej. Bodega principal, Oficina Quito..." required>
-    </div>
-    <button type="submit" id="btnEnviar">Enviar solicitud</button>
-    <p class="hint">Compras recibirá un correo con esta información al instante.</p>
+    <button type="submit" id="btnEnviar">Enviar orden de compra para aprobación</button>
+    <p class="hint">El administrador recibirá un correo para revisar y aprobar.</p>
   </form>
   <div class="success" id="success">
     <div class="success-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
     </div>
-    <h2>Solicitud enviada</h2>
-    <p>Compras fue notificado y comenzará a cotizar. Te avisaremos por correo cuando la cotización esté lista para tu aprobación.</p>
+    <h2>Cotización enviada</h2>
+    <p>El administrador fue notificado y puede revisar la orden de compra adjunta para aprobarla.</p>
     <span class="convid" id="convIdDisplay"></span>
   </div>
 </div>
 <script>
-  const DIRECTORIO = [
-    {"correo": "cmartinez@energycontrolsa.com", "nombre": "Carlos Martinez", "departamento": "Operaciones"},
-    {"correo": "ccisneros@energycontrolsa.com", "nombre": "Cristian Cisneros", "departamento": "Finanzas"},
-    {"correo": "dcepeda@energycontrolsa.com", "nombre": "Daniel Cepeda", "departamento": "Operaciones"},
-    {"correo": "jvillamar@energycontrolsa.com", "nombre": "Johara Villamar", "departamento": "Administración"},
-    {"correo": "jagarciauribe@energycontrolsa.com", "nombre": "Jorge Andres Garcia Uribe", "departamento": "Gerencia"},
-    {"correo": "jgarcia@energycontrolsa.com", "nombre": "Jorge Garcia Stael", "departamento": "Gerencia"},
-    {"correo": "jinga@energycontrolsa.com", "nombre": "Jorge Inga", "departamento": "Operaciones"},
-    {"correo": "jrodriguez@energycontrolsa.com", "nombre": "Juan Rodriguez", "departamento": "Operaciones"},
-    {"correo": "KPACHECO@energycontrolsa.com", "nombre": "Kelvin Pacheco", "departamento": "Operaciones"},
-    {"correo": "mpineyro@energycontrolsa.com", "nombre": "María Isabel Piñeyro", "departamento": "Operaciones"},
-    {"correo": "ocevallos@energycontrolsa.com", "nombre": "Otto Cevallos", "departamento": "Operaciones"},
-    {"correo": "pborja@energycontrolsa.com", "nombre": "Patricio Borja", "departamento": "Marketing"},
-    {"correo": "rampuero@energycontrolsa.com", "nombre": "Ricardo Ampuero", "departamento": "Comercial"},
-    {"correo": "rprado@energycontrolsa.com", "nombre": "Ricardo Prado", "departamento": "Ingeniería"},
-    {"correo": "stinta@energycontrolsa.com", "nombre": "Santiago Tinta", "departamento": "Operaciones"},
-    {"correo": "smaya@energycontrolsa.com", "nombre": "Shirley Maya Chavez", "departamento": "Administración"},
-    {"correo": "contabilidad@energycontrolsa.com", "nombre": "Ximena Coronel Vega", "departamento": "Administración"}
-  ];
-  const POWER_AUTOMATE_URL = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/16d56f95025c43cf8d2d27574268e1a6/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=tNneqM5exYpqfbYPSSCHMQAFS6c73noqpVfGYXpX_UE";
+  const POWER_AUTOMATE_URL = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/491a1bac4c424d0ba0ecc62fa9c1abf9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=N9MK91UKNOZFUDFV8k7osqsjH9X4vgKyptV2bJdb9l0";
   const CLAVE_SISTEMA = "y-1s4NVy6FMgR7HvpxbwVbP7puLo8KlP"; // debe coincidir con la que revisa el flujo de Power Automate
+
   // --- Carga el logo original exacto desde el repo (el SVG de arriba es solo respaldo) ---
   (async function cargarLogoOriginal() {
     try {
@@ -313,139 +201,109 @@
     }
   })();
 
-  const selectSolicitante = document.getElementById('solicitante');
-  const divisionInput = document.getElementById('division');
-  DIRECTORIO.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.correo;
-    opt.textContent = p.nombre;
-    opt.dataset.nombre = p.nombre;
-    opt.dataset.departamento = p.departamento;
-    selectSolicitante.appendChild(opt);
-  });
-  selectSolicitante.addEventListener('change', () => {
-    const opt = selectSolicitante.selectedOptions[0];
-    divisionInput.value = (opt && opt.dataset.departamento) ? opt.dataset.departamento : '';
-  });
-  function wireOtro(selectId, wrapId) {
-    const sel = document.getElementById(selectId);
-    const wrap = document.getElementById(wrapId);
-    sel.addEventListener('change', () => {
-      wrap.classList.toggle('show', sel.value === 'Otro');
-    });
+  // ── En producción, estos datos llegan precargados vía el ConvID en el link del correo ──
+  // Demo: se leen de la URL (?convId=...&solicitante=...&division=...&tipo=...&categoria=...&referencia=...)
+  // o se usa un ejemplo si no hay parámetros (para poder previsualizar el diseño).
+  const params = new URLSearchParams(window.location.search);
+  const datosSolicitud = {
+    convId: params.get('convId') || 'SOL-20260703-DEMO1',
+    solicitante: params.get('solicitante') || 'Jorge Inga',
+    division: params.get('division') || 'Operaciones',
+    tipo: params.get('tipo') || 'Local',
+    categoria: params.get('categoria') || 'Urgente',
+    referencia: params.get('referencia') || 'Solicitud Compras - Estructuras Ampliación PO 1898 Siglo 21',
+    proveedorSugerido: params.get('proveedorSugerido') || '',
+    docReferenciaNombre: params.get('docReferenciaNombre') || '',
+    docRefUrl: params.get('docRefUrl') || ''
+  };
+  document.getElementById('rSolicitante').textContent = datosSolicitud.solicitante;
+  document.getElementById('rDivision').textContent = datosSolicitud.division;
+  document.getElementById('rTipo').textContent = datosSolicitud.tipo;
+  document.getElementById('rReferencia').textContent = datosSolicitud.referencia;
+  if (datosSolicitud.proveedorSugerido) {
+    document.getElementById('rProveedorSugeridoWrap').style.display = 'block';
+    document.getElementById('rProveedorSugerido').textContent = datosSolicitud.proveedorSugerido;
+    document.getElementById('proveedor').value = datosSolicitud.proveedorSugerido;
   }
-  wireOtro('condicionesPago', 'condicionesOtroWrap');
-  // --- Toggle ¿Aplica número de PO? ---
-  const pedidoAplicaSi = document.getElementById('pedidoAplicaSi');
-  const pedidoAplicaNo = document.getElementById('pedidoAplicaNo');
-  const pedidoWrapSi = document.getElementById('pedidoWrapSi');
-  const pedidoWrapNo = document.getElementById('pedidoWrapNo');
-  function actualizarPedidoWraps() {
-    const aplica = pedidoAplicaSi.checked;
-    pedidoWrapSi.style.display = aplica ? 'block' : 'none';
-    pedidoWrapNo.style.display = aplica ? 'none' : 'block';
+  // Solo se muestra si el administrador adjuntó una cotización de referencia — es opcional, no siempre viene
+  if (datosSolicitud.docReferenciaNombre) {
+    document.getElementById('docRefRow').style.display = 'flex';
+    document.getElementById('docRefName').textContent = datosSolicitud.docReferenciaNombre;
   }
-  pedidoAplicaSi.addEventListener('change', actualizarPedidoWraps);
-  pedidoAplicaNo.addEventListener('change', actualizarPedidoWraps);
-  actualizarPedidoWraps();
-  // --- Archivo de cotización de referencia ---
-  const dropzoneRef = document.getElementById('dropzoneRef');
-  const fileInputRef = document.getElementById('fileInputRef');
-  const fileChipRef = document.getElementById('fileChipRef');
-  const fileNameRef = document.getElementById('fileNameRef');
-  const fileSizeRef = document.getElementById('fileSizeRef');
-  const fileRemoveRef = document.getElementById('fileRemoveRef');
-  let archivoRefBase64 = null;
-  let archivoRefNombre = null;
-  dropzoneRef.addEventListener('click', () => fileInputRef.click());
+  document.getElementById('btnVerDocRef').addEventListener('click', () => {
+    if (datosSolicitud.docRefUrl) {
+      window.open(datosSolicitud.docRefUrl, '_blank');
+    } else {
+      alert('No se encontró el enlace al documento de referencia.');
+    }
+  });
+  const catEl = document.getElementById('rCategoria');
+  catEl.textContent = datosSolicitud.categoria;
+  catEl.className = 'badge ' + (datosSolicitud.categoria === 'Crítica' ? 'critica' : datosSolicitud.categoria === 'Urgente' ? 'urgente' : 'normal');
+  // --- Dropzone / archivo ---
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const fileChip = document.getElementById('fileChip');
+  const fileName = document.getElementById('fileName');
+  const fileSize = document.getElementById('fileSize');
+  const fileRemove = document.getElementById('fileRemove');
+  let archivoBase64 = null;
+  let archivoNombre = null;
+  dropzone.addEventListener('click', () => fileInput.click());
   ['dragover','dragleave','drop'].forEach(evt => {
-    dropzoneRef.addEventListener(evt, (e) => {
+    dropzone.addEventListener(evt, (e) => {
       e.preventDefault();
-      dropzoneRef.classList.toggle('drag', evt === 'dragover');
+      dropzone.classList.toggle('drag', evt === 'dragover');
     });
   });
-  dropzoneRef.addEventListener('drop', (e) => {
-    if (e.dataTransfer.files.length) handleFileRef(e.dataTransfer.files[0]);
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
   });
-  fileInputRef.addEventListener('change', () => {
-    if (fileInputRef.files.length) handleFileRef(fileInputRef.files[0]);
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
   });
-  fileRemoveRef.addEventListener('click', (e) => {
+  fileRemove.addEventListener('click', (e) => {
     e.stopPropagation();
-    archivoRefBase64 = null; archivoRefNombre = null;
-    fileInputRef.value = '';
-    fileChipRef.classList.remove('show');
-    dropzoneRef.style.display = 'block';
+    archivoBase64 = null; archivoNombre = null;
+    fileInput.value = '';
+    fileChip.classList.remove('show');
+    dropzone.style.display = 'block';
   });
-  function handleFileRef(file) {
+  function handleFile(file) {
     const reader = new FileReader();
     reader.onload = () => {
-      archivoRefBase64 = reader.result.split(',')[1];
-      archivoRefNombre = file.name;
-      fileNameRef.textContent = file.name;
-      fileSizeRef.textContent = (file.size / 1024).toFixed(0) + ' KB';
-      fileChipRef.classList.add('show');
-      dropzoneRef.style.display = 'none';
+      archivoBase64 = reader.result.split(',')[1];
+      archivoNombre = file.name;
+      fileName.textContent = file.name;
+      fileSize.textContent = (file.size / 1024).toFixed(0) + ' KB';
+      fileChip.classList.add('show');
+      dropzone.style.display = 'none';
     };
     reader.readAsDataURL(file);
   }
-  const form = document.getElementById('formSolicitud');
+  const form = document.getElementById('formCotizacion');
   const btn = document.getElementById('btnEnviar');
   const successBox = document.getElementById('success');
-  function generarConvId() {
-    const fecha = new Date();
-    const yyyymmdd = fecha.toISOString().slice(0,10).replace(/-/g,'');
-    const random = Math.random().toString(36).slice(2,7).toUpperCase();
-    return `SOL-${yyyymmdd}-${random}`;
-  }
+  const resumenBox = document.getElementById('resumen');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    // --- Validaciones adicionales ---
-    const pedidoAplicaVal = form.querySelector('input[name="pedidoAplica"]:checked').value;
-    if (pedidoAplicaVal === 'Si' && !document.getElementById('pedido').value.trim()) {
-      alert('Por favor ingresa el número de PO.');
+    if (!archivoBase64) {
+      alert('Adjunta el archivo de la orden de compra antes de enviar.');
       return;
     }
-    if (pedidoAplicaVal === 'No' && !document.getElementById('motivo').value.trim()) {
-      alert('Por favor ingresa el motivo.');
-      return;
-    }
-    if (!archivoRefBase64) {
-      alert('Por favor adjunta la cotización de referencia.');
-      return;
-    }
-
     btn.disabled = true;
     btn.textContent = "Enviando...";
-    const convId = generarConvId();
-    const solicitanteOpt = selectSolicitante.selectedOptions[0];
-    const condicionesVal = document.getElementById('condicionesPago').value === 'Otro'
-      ? document.getElementById('condicionesOtro').value
-      : document.getElementById('condicionesPago').value;
     const ahora = new Date();
     const payload = {
       clave: CLAVE_SISTEMA,
-      etapa: "solicitud",
-      convId: convId,
-      correoSolicitante: solicitanteOpt.value,
-      nombreSolicitante: solicitanteOpt.dataset.nombre,
+      etapa: "cotizacion",
+      convId: datosSolicitud.convId,
       fecha: ahora.toLocaleDateString('es-EC'),
-      mes: ahora.toLocaleString('es-EC', { month: 'long' }),
       hora: ahora.toLocaleTimeString('es-EC'),
-      forma: "Formulario Web",
-      tipo: document.getElementById('tipo').value,
-      condicionesDePago: condicionesVal,
-      division: divisionInput.value,
-      pedidoAplica: pedidoAplicaVal,
-      pedidoCotizacion: pedidoAplicaVal === 'Si' ? document.getElementById('pedido').value : '',
-      motivo: pedidoAplicaVal === 'No' ? document.getElementById('motivo').value : '',
-      proveedorSugerido: document.getElementById('proveedorSugerido').value,
-      archivoReferenciaNombre: archivoRefNombre || "",
-      archivoReferenciaBase64: archivoRefBase64 || "",
-      referencia: document.getElementById('referencia').value,
-      categoria: form.querySelector('input[name="categoria"]:checked').value,
-      lugarEntrega: document.getElementById('lugarEntrega').value
+      proveedor: document.getElementById('proveedor').value,
+      comentarios: document.getElementById('comentarios').value,
+      archivoNombre: archivoNombre,
+      archivoBase64: archivoBase64
     };
     try {
       if (POWER_AUTOMATE_URL && POWER_AUTOMATE_URL.startsWith('http')) {
@@ -456,16 +314,17 @@
         });
         if (!resp.ok) throw new Error('Respuesta no válida del flujo');
       } else {
-        console.log('DEMO — payload que se enviaría:', {...payload, archivoReferenciaBase64: archivoRefBase64 ? '[' + archivoRefBase64.length + ' caracteres]' : null});
-        await new Promise(r => setTimeout(r, 600));
+        console.log('DEMO — payload que se enviaría (archivo omitido del log):', {...payload, archivoBase64: '[' + archivoBase64.length + ' caracteres]'});
+        await new Promise(r => setTimeout(r, 700));
       }
-      document.getElementById('convIdDisplay').textContent = convId;
+      document.getElementById('convIdDisplay').textContent = datosSolicitud.convId;
       form.classList.add('hidden');
+      resumenBox.classList.add('hidden');
       successBox.classList.add('show');
     } catch (err) {
-      alert('No se pudo enviar la solicitud. Intenta de nuevo. (' + err.message + ')');
+      alert('No se pudo enviar la cotización. Intenta de nuevo. (' + err.message + ')');
       btn.disabled = false;
-      btn.textContent = "Enviar solicitud";
+      btn.textContent = "Enviar orden de compra para aprobación";
     }
   });
 </script>
