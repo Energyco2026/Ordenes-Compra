@@ -17,6 +17,7 @@
     --ink: #1C2321;
     --ink-soft: #5B6460;
     --danger: #B3401F;
+    --warning: #C1701F;
     --radius: 10px;
   }
   * { box-sizing: border-box; }
@@ -95,6 +96,7 @@
   }
   .chip-opt span small { display: block; font-size: 10.5px; font-weight: 500; margin-top: 2px; opacity: .85; }
   .chip-opt input:checked + span { border-color: var(--navy); background: var(--navy); color: #fff; }
+  .chip-opt[data-level="urgente"] input:checked + span { border-color: var(--warning); background: var(--warning); color: #fff; }
   .chip-opt[data-level="critica"] input:checked + span { border-color: var(--danger); background: var(--danger); }
   .dropzone { border: 1.5px dashed var(--line); border-radius: 9px; background: var(--paper); padding: 18px 16px; text-align: center; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
   .dropzone:hover, .dropzone.drag { border-color: var(--navy); background: #EFF2F6; }
