@@ -184,7 +184,7 @@
   // --- Carga el logo original exacto desde el repo (el SVG de arriba es solo respaldo) ---
   (async function cargarLogoOriginal() {
     try {
-      const resp = await fetch('https://raw.githubusercontent.com/energyco2026/Ordenes-Compra/master/flujo1_solicitud.html');
+      const resp = await fetch('flujo3_aprobacion.html');
       if (!resp.ok) return;
       const texto = await resp.text();
       const m = texto.match(/<img src="(data:image\/png;base64,[^"]+)"/);
