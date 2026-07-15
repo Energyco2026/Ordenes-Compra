@@ -257,7 +257,7 @@
         </label>
       </div>
     </div>
-<div class="field">
+    <div class="field">
       <label for="lugarEntrega">Dónde entregar la mercadería</label>
       <input type="text" id="lugarEntrega" name="lugarEntrega" placeholder="Ej. Bodega principal, Oficina Quito..." required>
     </div>
@@ -455,7 +455,8 @@
       archivoReferenciaBase64: archivoRefBase64 || "",
       referencia: document.getElementById('referencia').value,
       categoria: form.querySelector('input[name="categoria"]:checked').value,
-      lugarEntrega: document.getElementById('lugarEntrega').value
+      lugarEntrega: document.getElementById('lugarEntrega').value,
+      fechaRequerida: document.getElementById('fechaRequerida').value
     };
     try {
       if (POWER_AUTOMATE_URL && POWER_AUTOMATE_URL.startsWith('http')) {
