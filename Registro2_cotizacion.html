@@ -172,6 +172,10 @@
       <span class="del-mat" onclick="this.closest('.mat-row').remove()">Quitar</span>
       <label>Descripción del material</label>
       <input type="text" class="mat-nombre" value="${nombrePrellenado ? nombrePrellenado.replace(/"/g,'&quot;') : ''}" placeholder="Ej. Cable 12AWG - 50 metros">
+      <div class="price-grid" style="margin-bottom:10px;">
+        <div><label>Cantidad</label><input type="number" step="0.01" class="mat-cantidad" placeholder="0"></div>
+        <div><label>Unidad</label><input type="text" class="mat-unidad" placeholder="Ej. unidades, metros, kg"></div>
+      </div>
       <div class="price-grid">
         <div><label>Precio Prov. A</label><input type="number" step="0.01" class="mat-precioA" placeholder="0.00"></div>
         <div><label>Precio Prov. B</label><input type="number" step="0.01" class="mat-precioB" placeholder="0.00"></div>
@@ -230,8 +234,10 @@
     e.preventDefault();
     const btn = document.getElementById('btnEnviar');
 
-    const materiales = Array.from(document.querySelectorAll('.mat-row')).map(row => ({
+   const materiales = Array.from(document.querySelectorAll('.mat-row')).map(row => ({
       descripcion: row.querySelector('.mat-nombre').value,
+      cantidad: parseFloat(row.querySelector('.mat-cantidad').value) || 0,
+      unidad: row.querySelector('.mat-unidad').value,
       precioA: parseFloat(row.querySelector('.mat-precioA').value) || 0,
       precioB: parseFloat(row.querySelector('.mat-precioB').value) || 0,
       precioC: parseFloat(row.querySelector('.mat-precioC').value) || 0
