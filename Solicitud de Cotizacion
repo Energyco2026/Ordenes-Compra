@@ -242,7 +242,7 @@
 
   // ¡IMPORTANTE! Reemplaza esto con la URL real del disparador HTTP de tu Flujo 1 de Cotizaciones en Power Automate
   const POWER_AUTOMATE_URL = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/14/workflows/2ab1b0209e9b427c9ae93808b878d448/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VawNfxW07d6du-DEslcP_iv1_f9Vb7nexnkqknhxlMg";
-  const CLAVE_SISTEMA = "energycontrol2026cotizso"; // debe coincidir con la que revisa el flujo de Power Automate
+  const CLAVE_SISTEMA = "energycontrol2026cotiz"; // debe coincidir con la que revisa el flujo de Power Automate
 
   const selectSolicitante = document.getElementById('solicitante');
   const divisionInput = document.getElementById('division');
