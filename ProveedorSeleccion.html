@@ -16,6 +16,7 @@
   body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 32px 16px 64px; }
   .sheet { width: 100%; max-width: 720px; }
   .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .brand img, .brand svg { height: 36px; width: auto; display: block; }
   .brand-sub { font-size: 11px; color: var(--ink-soft); letter-spacing: .03em; border-left: 2px solid var(--line); padding-left: 12px; line-height: 1.4; }
   h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; color: var(--navy-deep); margin: 0 0 4px; }
   .lede { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 22px; }
@@ -61,6 +62,17 @@
 <body>
 <div class="sheet">
   <div class="brand">
+    <svg id="logoFallback" viewBox="0 0 240 100" role="img" aria-label="ENERGYCONTROL">
+      <g transform="translate(120,22)">
+        <ellipse cx="0" cy="0" rx="23" ry="9" fill="none" stroke="#6F9A35" stroke-width="5" transform="rotate(35)"/>
+        <ellipse cx="0" cy="0" rx="23" ry="9" fill="none" stroke="#6F9A35" stroke-width="5" transform="rotate(-35)"/>
+        <circle cx="-4" cy="-3" r="2.6" fill="#6F9A35"/>
+        <circle cx="5" cy="2" r="1.9" fill="#6F9A35"/>
+      </g>
+      <text x="0" y="62" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="30" letter-spacing="-0.5" fill="#8B909A">energycontrol</text>
+      <text x="0" y="82" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#8B909A">propelled by &#9650; semgroup</text>
+    </svg>
+    <img id="logoImg" alt="ENERGYCONTROL" style="display:none;">
     <div class="brand-sub">Selección de<br>proveedor por material</div>
   </div>
   <h1>Elegir proveedor</h1>
@@ -102,6 +114,26 @@
   const URL_FLUJO3 = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/2ae07bef64ce423cbdff3c3005818c32/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=FozpGob1IURjECUtHVLlddxnjDC_dvXbToUS49W0Fr4";
   const CLAVE_SISTEMA = "sc2026kxq9zv";
 
+  // --- Carga el logo original exacto desde el repo (el SVG de arriba es solo respaldo) ---
+  (async function cargarLogoOriginal() {
+    try {
+      const resp = await fetch('Registro2_cotizacion.html');
+      if (!resp.ok) return;
+      const texto = await resp.text();
+      const m = texto.match(/<img src="(data:image\/png;base64,[^"]+)"/);
+      if (m && m[1]) {
+        const img = document.getElementById('logoImg');
+        img.src = m[1];
+        img.onload = () => {
+          img.style.display = 'block';
+          document.getElementById('logoFallback').style.display = 'none';
+        };
+      }
+    } catch (e) {
+      // Sin conexión o repo no accesible: se queda el logo SVG de respaldo
+    }
+  })();
+
   const params = new URLSearchParams(window.location.search);
   const convId = params.get('id');
 
@@ -110,6 +142,7 @@
   const mainContent = document.getElementById('mainContent');
 
   let materialesData = [];
+  let nombresProveedor = { A: 'Proveedor A', B: 'Proveedor B', C: 'Proveedor C' };
 
   function renderMateriales() {
     const container = document.getElementById('materialesContainer');
@@ -117,9 +150,9 @@
 
     materialesData.forEach((mat, idx) => {
       const proveedores = [
-        { letra: 'A', nombre: mat['Proveedor'] || null, precio: mat['Precio Proveedor A'] },
-        { letra: 'B', nombre: mat['Proveedor B'] || null, precio: mat['Precio Proveedor B'] },
-        { letra: 'C', nombre: mat['Proveedor C'] || null, precio: mat['Precio Proveedor C'] }
+        { letra: 'A', nombre: nombresProveedor.A, precio: mat['Precio Proveedor A'] },
+        { letra: 'B', nombre: nombresProveedor.B, precio: mat['Precio Proveedor B'] },
+        { letra: 'C', nombre: nombresProveedor.C, precio: mat['Precio Proveedor C'] }
       ].filter(p => p.precio !== undefined && p.precio !== null && p.precio > 0);
 
       // Determinar el precio más bajo entre los disponibles
@@ -135,9 +168,9 @@
         const isBest = p.precio === minPrecio;
         const checked = isBest ? 'checked' : '';
         optionsHtml += `
-          <label class="prov-option ${isBest ? 'best selected' : ''}" data-precio="${p.precio}" data-nombre="Proveedor ${p.letra}">
-            <input type="radio" name="prov_${idx}" value="Proveedor ${p.letra}" data-precio="${p.precio}" ${checked}>
-            <span class="prov-name">Proveedor ${p.letra}</span>
+          <label class="prov-option ${isBest ? 'best selected' : ''}" data-precio="${p.precio}" data-nombre="${p.nombre}">
+            <input type="radio" name="prov_${idx}" value="${p.nombre}" data-precio="${p.precio}" ${checked}>
+            <span class="prov-name">${p.nombre}</span>
             <span class="prov-price">$${Number(p.precio).toFixed(2)}</span>
           </label>`;
       });
@@ -200,6 +233,12 @@
       document.getElementById('refSolicitante').textContent = datos.nombreAdministrador;
       document.getElementById('refDepto').textContent = datos.departamento;
       document.getElementById('refDescripcion').textContent = datos.descripcionGeneral;
+
+      nombresProveedor = {
+        A: datos.nombreProveedorA || 'Proveedor A',
+        B: datos.nombreProveedorB || 'Proveedor B',
+        C: datos.nombreProveedorC || 'Proveedor C'
+      };
 
       materialesData = datos.materiales || [];
       renderMateriales();
@@ -275,4 +314,3 @@
 </script>
 </body>
 </html>
-
