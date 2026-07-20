@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selección de Proveedor · ENERGYCONTROL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1F3864; --navy-deep: #14264a; --green: #6F9A35; --green-deep: #587D29;
+    --paper: #F7F8F5; --line: #DDE2D8; --ink: #1C2321; --ink-soft: #5B6460;
+    --danger: #B3401F; --warning: #C1701F; --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 32px 16px 64px; }
+  .sheet { width: 100%; max-width: 720px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .brand-sub { font-size: 11px; color: var(--ink-soft); letter-spacing: .03em; border-left: 2px solid var(--line); padding-left: 12px; line-height: 1.4; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; color: var(--navy-deep); margin: 0 0 4px; }
+  .lede { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 22px; }
+  .ref-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 20px; }
+  .ref-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--paper); }
+  .ref-row:last-child { border-bottom: none; }
+  .ref-row span:first-child { color: var(--ink-soft); }
+  .ref-row span:last-child { font-weight: 600; color: var(--navy-deep); text-align: right; max-width: 60%; }
+  .loading, .errbox { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 40px 24px; text-align: center; color: var(--ink-soft); font-size: 13.5px; }
+  .errbox { color: var(--danger); display: none; }
+
+  section.card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; }
+  section.card h2 { font-family: 'Space Grotesk', sans-serif; font-size: 15px; color: var(--navy-deep); margin: 0 0 14px; }
+
+  .mat-block { border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-bottom: 14px; background: var(--paper); }
+  .mat-desc { font-size: 13.5px; font-weight: 600; color: var(--navy-deep); margin-bottom: 12px; }
+  .prov-options { display: grid; gap: 8px; margin-bottom: 10px; }
+  .prov-option { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); border-radius: 7px; padding: 10px 12px; background: #fff; cursor: pointer; transition: border-color .15s; }
+  .prov-option:hover { border-color: var(--navy); }
+  .prov-option.selected { border-color: var(--green); background: #F2F7EC; }
+  .prov-option.best::after { content: '💰 Más bajo'; font-size: 10px; font-weight: 700; color: var(--green-deep); background: #E3EFD6; padding: 2px 7px; border-radius: 20px; margin-left: auto; }
+  .prov-option input[type=radio] { accent-color: var(--green); width: 16px; height: 16px; flex-shrink: 0; }
+  .prov-option .prov-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .prov-option .prov-price { font-size: 13px; color: var(--ink-soft); margin-left: 6px; }
+  .prov-option.disabled { opacity: .45; cursor: not-allowed; }
+
+  .motivo-box { display: none; margin-top: 8px; }
+  .motivo-box.show { display: block; }
+  .motivo-box label { display: block; font-size: 11px; font-weight: 600; color: var(--warning); margin-bottom: 4px; }
+  .motivo-box textarea { width: 100%; padding: 8px 10px; border: 1.5px solid var(--warning); border-radius: 6px; font-size: 13px; font-family: inherit; resize: vertical; min-height: 50px; }
+
+  button[type=submit] { width: 100%; margin-top: 6px; padding: 14px; border: none; border-radius: 7px; background: var(--navy); color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
+  button[type=submit]:disabled { background: #9aa5b5; cursor: not-allowed; }
+  .hint { font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; text-align: center; }
+  .main-content { display: none; }
+  .success { display: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 40px 28px; text-align: center; }
+  .success.show { display: block; }
+  .success-icon { width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; }
+  .success h2 { font-family: 'Space Grotesk', sans-serif; font-size: 19px; color: var(--navy-deep); margin: 0 0 6px; }
+  .success p { font-size: 13.5px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="brand">
+    <div class="brand-sub">Selección de<br>proveedor por material</div>
+  </div>
+  <h1>Elegir proveedor</h1>
+  <p class="lede">Revisa los precios cotizados por material y confirma tu selección.</p>
+
+  <div class="loading" id="loadingBox">Cargando cotizaciones...</div>
+  <div class="errbox" id="errBox"></div>
+
+  <div class="main-content" id="mainContent">
+    <div class="ref-card">
+      <div class="ref-row"><span>Folio</span><span id="refFolio"></span></div>
+      <div class="ref-row"><span>Solicitó</span><span id="refSolicitante"></span></div>
+      <div class="ref-row"><span>Departamento</span><span id="refDepto"></span></div>
+      <div class="ref-row"><span>Descripción</span><span id="refDescripcion"></span></div>
+    </div>
+
+    <form id="formSeleccion">
+      <section class="card">
+        <h2>Materiales cotizados</h2>
+        <div id="materialesContainer"></div>
+      </section>
+
+      <button type="submit" id="btnEnviar">Confirmar selección</button>
+      <p class="hint">Se notificará a Compras para generar la orden correspondiente.</p>
+    </form>
+  </div>
+
+  <div class="success" id="success">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+    <h2>Selección confirmada</h2>
+    <p>Compras fue notificado y ya puede generar la orden de compra.</p>
+  </div>
+</div>
+
+<script>
+  // ¡IMPORTANTE! URL del Flujo 3 (mismo flujo para obtener y guardar, según el campo "modo")
+  const URL_FLUJO3 = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/2ae07bef64ce423cbdff3c3005818c32/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=FozpGob1IURjECUtHVLlddxnjDC_dvXbToUS49W0Fr4";
+  const CLAVE_SISTEMA = "sc2026kxq9zv";
+
+  const params = new URLSearchParams(window.location.search);
+  const convId = params.get('id');
+
+  const loadingBox = document.getElementById('loadingBox');
+  const errBox = document.getElementById('errBox');
+  const mainContent = document.getElementById('mainContent');
+
+  let materialesData = [];
+
+  function renderMateriales() {
+    const container = document.getElementById('materialesContainer');
+    container.innerHTML = '';
+
+    materialesData.forEach((mat, idx) => {
+      const proveedores = [
+        { letra: 'A', nombre: mat['Proveedor'] || null, precio: mat['Precio Proveedor A'] },
+        { letra: 'B', nombre: mat['Proveedor B'] || null, precio: mat['Precio Proveedor B'] },
+        { letra: 'C', nombre: mat['Proveedor C'] || null, precio: mat['Precio Proveedor C'] }
+      ].filter(p => p.precio !== undefined && p.precio !== null && p.precio > 0);
+
+      // Determinar el precio más bajo entre los disponibles
+      let minPrecio = Infinity;
+      proveedores.forEach(p => { if (p.precio < minPrecio) minPrecio = p.precio; });
+
+      const block = document.createElement('div');
+      block.className = 'mat-block';
+      block.dataset.matIdx = idx;
+
+      let optionsHtml = '';
+      proveedores.forEach((p, pIdx) => {
+        const isBest = p.precio === minPrecio;
+        const checked = isBest ? 'checked' : '';
+        optionsHtml += `
+          <label class="prov-option ${isBest ? 'best selected' : ''}" data-precio="${p.precio}" data-nombre="Proveedor ${p.letra}">
+            <input type="radio" name="prov_${idx}" value="Proveedor ${p.letra}" data-precio="${p.precio}" ${checked}>
+            <span class="prov-name">Proveedor ${p.letra}</span>
+            <span class="prov-price">$${Number(p.precio).toFixed(2)}</span>
+          </label>`;
+      });
+
+      block.innerHTML = `
+        <div class="mat-desc">${mat['Descripcion Material'] || ''}</div>
+        <div class="prov-options">${optionsHtml}</div>
+        <div class="motivo-box" id="motivo_${idx}">
+          <label>Motivo (obligatorio si no eliges el precio más bajo)</label>
+          <textarea class="motivo-input" placeholder="Ej. mejor tiempo de entrega, calidad, garantía..."></textarea>
+        </div>
+      `;
+      container.appendChild(block);
+
+      // Guardar el precio mínimo para comparar después
+      block.dataset.minPrecio = minPrecio;
+    });
+
+    // Listeners para mostrar/ocultar motivo y marcar seleccionado
+    document.querySelectorAll('.mat-block').forEach(block => {
+      const radios = block.querySelectorAll('input[type=radio]');
+      const motivoBox = block.querySelector('.motivo-box');
+      const minPrecio = parseFloat(block.dataset.minPrecio);
+
+      function actualizar() {
+        block.querySelectorAll('.prov-option').forEach(opt => opt.classList.remove('selected'));
+        const checked = block.querySelector('input[type=radio]:checked');
+        if (checked) {
+          checked.closest('.prov-option').classList.add('selected');
+          const precioElegido = parseFloat(checked.dataset.precio);
+          if (precioElegido > minPrecio) {
+            motivoBox.classList.add('show');
+          } else {
+            motivoBox.classList.remove('show');
+          }
+        }
+      }
+      radios.forEach(r => r.addEventListener('change', actualizar));
+      actualizar();
+    });
+  }
+
+  async function cargarSolicitud() {
+    if (!convId) {
+      loadingBox.style.display = 'none';
+      errBox.style.display = 'block';
+      errBox.textContent = 'No se encontró el folio en el link. Usa el link exacto que llegó en el correo.';
+      return;
+    }
+    try {
+      const resp = await fetch(URL_FLUJO3, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clave: CLAVE_SISTEMA, convId: convId, modo: 'obtener' })
+      });
+      if (!resp.ok) throw new Error('No se pudo obtener la información');
+      const datos = await resp.json();
+
+      document.getElementById('refFolio').textContent = datos.convId;
+      document.getElementById('refSolicitante').textContent = datos.nombreAdministrador;
+      document.getElementById('refDepto').textContent = datos.departamento;
+      document.getElementById('refDescripcion').textContent = datos.descripcionGeneral;
+
+      materialesData = datos.materiales || [];
+      renderMateriales();
+
+      loadingBox.style.display = 'none';
+      mainContent.style.display = 'block';
+    } catch (err) {
+      loadingBox.style.display = 'none';
+      errBox.style.display = 'block';
+      errBox.textContent = 'Error al cargar la solicitud: ' + err.message;
+    }
+  }
+  cargarSolicitud();
+
+  document.getElementById('formSeleccion').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnEnviar');
+
+    const selecciones = [];
+    let faltaMotivo = false;
+
+    document.querySelectorAll('.mat-block').forEach((block, idx) => {
+      const checked = block.querySelector('input[type=radio]:checked');
+      const descripcion = materialesData[idx]['Descripcion Material'] || '';
+      const motivoInput = block.querySelector('.motivo-input');
+      const motivoBox = block.querySelector('.motivo-box');
+
+      if (!checked) { faltaMotivo = true; return; }
+
+      const proveedorElegido = checked.value;
+      const precioElegido = parseFloat(checked.dataset.precio);
+      const motivo = motivoInput ? motivoInput.value.trim() : '';
+
+      if (motivoBox.classList.contains('show') && !motivo) {
+        faltaMotivo = true;
+        motivoInput.style.borderColor = '#B3401F';
+        return;
+      }
+
+      selecciones.push({ descripcion, proveedorElegido, precioElegido, motivo });
+    });
+
+    if (faltaMotivo) {
+      alert('Falta elegir un proveedor o escribir el motivo en alguno de los materiales.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const resp = await fetch(URL_FLUJO3, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clave: CLAVE_SISTEMA,
+          convId: convId,
+          modo: 'guardar',
+          selecciones: JSON.stringify(selecciones)
+        })
+      });
+      if (!resp.ok) throw new Error('Respuesta no válida del flujo');
+
+      document.getElementById('formSeleccion').style.display = 'none';
+      document.querySelector('.ref-card').style.display = 'none';
+      document.getElementById('success').classList.add('show');
+    } catch (err) {
+      alert('No se pudo enviar. Intenta de nuevo. (' + err.message + ')');
+      btn.disabled = false;
+      btn.textContent = 'Confirmar selección';
+    }
+  });
+</script>
+</body>
+</html>
