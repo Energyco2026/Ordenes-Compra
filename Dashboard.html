@@ -228,7 +228,7 @@
     <div id="tablaOcWrap"></div>
   </div>
 
-  <p class="note">Datos en vivo desde Excel, vía el flujo de Power Automate. "Descripción", "Categoría" y "Departamento" se completarán en un próximo ajuste.</p>
+  <p class="note">Datos en vivo desde Excel, vía el flujo de Power Automate.</p>
 </div>
 
 <script>
@@ -296,8 +296,8 @@
         fechaOrden: d.FechaOrden || null,
         fechaAprobacion: d.FechaAprobacion || null,
         fechaEnvio: d.FechaEnvio || null,
-        fechaEsperadaMaterial: d.FechaEntregaEsperada || null,
-        fechaRecibido: d.FechaRecepcionReal || null
+        fechaEsperadaMaterial: excelSerialADate(d.FechaEntregaEsperada),
+        fechaRecibido: excelSerialADate(d.FechaRecepcionReal)
       }));
     } catch (e) {
       console.error("No se pudo cargar el flujo de Power Automate:", e);
@@ -355,7 +355,7 @@
       { nombre: "Confirmar envío a proveedor", responsable: "Compras",
         estado: rechazada ? "skipped" : (d.fechaEnvio ? "done" : (d.fechaAprobacion ? "pending" : "skipped")), fecha: d.fechaEnvio,
         url: (d.fechaAprobacion && !d.fechaEnvio && !rechazada) ? ("flujo5_envio.html?" + qsFlujo5) : null },
-      { nombre: "Confirmar recepción de mercadería", responsable: "Mayra Rodríguez (Compras)",
+      { nombre: "Confirmar recepción de mercadería", responsable: "Mayra Rodríguez (Compras)" + (d.fechaEsperadaMaterial ? " · esperada " + d.fechaEsperadaMaterial : ""),
         estado: rechazada ? "skipped" : (d.fechaRecibido ? "done" : (d.fechaEnvio ? "pending" : "skipped")), fecha: d.fechaRecibido },
     ];
   }
@@ -534,6 +534,22 @@
     });
   }
 
+  // Convierte un número de serie de fecha de Excel (ej. 46234) a "d/m/yyyy".
+  // Si el valor ya viene como texto de fecha, lo deja igual.
+  function excelSerialADate(valor) {
+    if (valor === null || valor === undefined || valor === '') return null;
+    if (typeof valor === 'number' || /^\d+(\.\d+)?$/.test(String(valor).trim())) {
+      const serial = parseFloat(valor);
+      const ms = Math.round((serial - 25569) * 86400 * 1000); // 25569 = días entre 1899-12-30 y 1970-01-01
+      const fecha = new Date(ms);
+      const d = String(fecha.getUTCDate()).padStart(2, '0');
+      const m = String(fecha.getUTCMonth() + 1).padStart(2, '0');
+      const y = fecha.getUTCFullYear();
+      return `${d}/${m}/${y}`;
+    }
+    return valor;
+  }
+
   function diasParaEntrega(fechaStr) {
     if (!fechaStr) return null;
     const [d, m, y] = fechaStr.split('/').map(Number);
@@ -582,7 +598,7 @@
     if (!filtrado.length) { wrap.innerHTML = '<div class="empty">No hay solicitudes que coincidan con el filtro.</div>'; return; }
 
     wrap.innerHTML = `<table><thead><tr>
-      <th>Folio</th><th>PO</th><th>Solicitante</th><th>Proveedor</th><th>Descripción</th><th>Categoría</th><th>Fecha</th><th>Etapa actual</th>
+      <th>Folio</th><th>PO</th><th>Solicitante</th><th>Proveedor</th><th>Descripción</th><th>Categoría</th><th>Fecha</th><th>Entrega esperada</th><th>Etapa actual</th>
     </tr></thead><tbody>` + filtrado.map((d, i) => `
       <tr class="clickable" data-toggle="oc-${i}">
         <td data-label="Folio"><span class="folio">${d.convId}</span></td>
@@ -592,10 +608,11 @@
         <td data-label="Descripción" class="desc">${d.descripcion}</td>
         <td data-label="Categoría"><span class="urg ${urgClass(d.categoria)}">${d.categoria}</span></td>
         <td data-label="Fecha" class="muted">${d.fecha}</td>
-        <td data-label="Etapa actual">${avisoEntrega(d)}<span class="badge ${stageClassOc(d.etapa)}">${d.etapa}</span></td>
+        <td data-label="Entrega esperada" class="muted">${avisoEntrega(d)}${d.fechaEsperadaMaterial || "—"}</td>
+        <td data-label="Etapa actual"><span class="badge ${stageClassOc(d.etapa)}">${d.etapa}</span></td>
       </tr>
       <tr class="detail-row" id="oc-${i}" style="display:none;">
-        <td colspan="8">
+        <td colspan="9">
           <div class="detail-inner">
             <div class="detail-title">Ruta de ${d.convId}${d.numeroPO ? ' · PO ' + d.numeroPO : ''}</div>
             ${renderTimeline(pasosOc(d))}
