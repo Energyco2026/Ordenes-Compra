@@ -228,42 +228,83 @@
     <div id="tablaOcWrap"></div>
   </div>
 
-  <p class="note">Datos de ejemplo — pendiente conectar al flujo de Power Automate que unifica ambas tablas.</p>
+  <p class="note">Datos en vivo desde Excel, vía el flujo de Power Automate. "Descripción", "Categoría" y "Departamento" se completarán en un próximo ajuste.</p>
 </div>
 
 <script>
-  // ============ DATOS DE EJEMPLO (a reemplazar por fetch al flujo de Power Automate) ============
-  const DATA_COT = [
-    { convId: "SC-20260728-A1B2C", solicitante: "Jorge Inga", departamento: "Operaciones", descripcion: "Materiales para proyecto San Felipe", urgencia: "Normal", tipo: "Local", fecha: "28/07/2026", etapa: "Por cotizar",
-      fechaSolicitud: "28/07/2026", fechaCotizado: null, fechaSeleccion: null },
-    { convId: "SC-20260727-Q9K3M", solicitante: "María Isabel Piñeyro", departamento: "Operaciones", descripcion: "Cableado y breakers - Ampliación bodega", urgencia: "Urgente", tipo: "Local", fecha: "27/07/2026", etapa: "Por seleccionar",
-      fechaSolicitud: "27/07/2026", fechaCotizado: "28/07/2026", fechaSeleccion: null },
-    { convId: "SC-20260725-TT6DS", solicitante: "Ricardo Prado", departamento: "Ingeniería", descripcion: "Estructuras metálicas PO 1898", urgencia: "Normal", tipo: "Internacional", fecha: "25/07/2026", etapa: "Por seleccionar",
-      fechaSolicitud: "25/07/2026", fechaCotizado: "26/07/2026", fechaSeleccion: null },
-    { convId: "SC-20260722-ZTOOP", solicitante: "Otto Cevallos", departamento: "Operaciones", descripcion: "Tableros eléctricos - Planta Vinces", urgencia: "Urgente", tipo: "Local", fecha: "22/07/2026", etapa: "Cotización cerrada",
-      fechaSolicitud: "22/07/2026", fechaCotizado: "23/07/2026", fechaSeleccion: "24/07/2026", proveedorElegido: "MAYA2", ocConvId: null },
-    { convId: "SC-20260720-SBAOV", solicitante: "Shirley Maya Chavez", departamento: "Administración", descripcion: "Camisas, pantalones y correas - Dotación", urgencia: "Normal", tipo: "Local", fecha: "20/07/2026", etapa: "Cotización cerrada",
-      fechaSolicitud: "20/07/2026", fechaCotizado: "20/07/2026", fechaSeleccion: "20/07/2026", proveedorElegido: "MAYA1", ocConvId: "SOL-20260720-C4T8Q" },
-  ];
+  // ============ DATOS REALES (vienen del flujo de Power Automate) ============
+  let DATA_COT = [];
+  let DATA_OC = [];
 
-  const DATA_OC = [
-    { convId: "SOL-20260729-K7H2L", numeroPO: "PO1898", solicitante: "Jorge Inga", departamento: "Operaciones", descripcion: "Solicitud Compras - Estructuras Ampliación PO 1898 Siglo 21", categoria: "Urgente", fecha: "29/07/2026", etapa: "Por generar orden", proveedor: null,
-      aprobador: "Jorge Garcia Stael", fechaSolicitud: "29/07/2026", fechaOrden: null, fechaAprobacion: null, fechaEnvio: null, fechaEsperadaMaterial: "10/08/2026", fechaRecibido: null },
-    { convId: "SOL-20260728-P4W9X", numeroPO: "PO1727", solicitante: "Daniel Cepeda", departamento: "Operaciones", descripcion: "Alquiler de baños portátiles PO1727", categoria: "Normal", fecha: "28/07/2026", etapa: "Por aprobar", proveedor: "Baños Portátiles del Pacífico",
-      aprobador: "Jorge Andres Garcia Uribe", fechaSolicitud: "28/07/2026", fechaOrden: "29/07/2026", fechaAprobacion: null, fechaEnvio: null, fechaEsperadaMaterial: "05/08/2026", fechaRecibido: null },
-    { convId: "SOL-20260726-M2T7B", numeroPO: "No aplica", solicitante: "Kelvin Pacheco", departamento: "Operaciones", descripcion: "Repuestos de bomba - Planta Vinces", categoria: "Crítica", fecha: "26/07/2026", etapa: "Por aprobar", proveedor: "Bombas y Motores EC",
-      aprobador: "Jorge Garcia Stael", fechaSolicitud: "26/07/2026", fechaOrden: "26/07/2026", fechaAprobacion: null, fechaEnvio: null, fechaEsperadaMaterial: "03/08/2026", fechaRecibido: null },
-    { convId: "SOL-20260724-J8N1R", numeroPO: "OFV25-00019314", solicitante: "Ricardo Prado", departamento: "Ingeniería", descripcion: "Materiales de instalación eléctrica", categoria: "Normal", fecha: "24/07/2026", etapa: "Por enviar a proveedor", proveedor: "Electro Suministros Guayaquil",
-      aprobador: "Jorge Garcia Stael", fechaSolicitud: "24/07/2026", fechaOrden: "24/07/2026", fechaAprobacion: "25/07/2026", fechaEnvio: null, fechaEsperadaMaterial: "02/08/2026", fechaRecibido: null },
-    { convId: "SOL-20260721-D3V6Y", numeroPO: "No aplica", solicitante: "Cristian Cisneros", departamento: "Finanzas", descripcion: "Suministros de oficina", categoria: "Normal", fecha: "21/07/2026", etapa: "Rechazada", proveedor: "Distribuidora Office EC",
-      aprobador: "Jorge Andres Garcia Uribe", fechaSolicitud: "21/07/2026", fechaOrden: "21/07/2026", fechaAprobacion: "22/07/2026", fechaEnvio: null, fechaEsperadaMaterial: null, fechaRecibido: null },
-    { convId: "SOL-20260718-F5C0Z", numeroPO: "PO2011", solicitante: "Abel Carrasco", departamento: "Operaciones", descripcion: "Equipos de protección personal", categoria: "Urgente", fecha: "18/07/2026", etapa: "Enviada a proveedor", proveedor: "Ferretería Industrial SA",
-      aprobador: "Jorge Garcia Stael", fechaSolicitud: "18/07/2026", fechaOrden: "18/07/2026", fechaAprobacion: "19/07/2026", fechaEnvio: "19/07/2026", fechaEsperadaMaterial: "02/08/2026", fechaRecibido: null },
-    { convId: "SOL-20260710-N8B2P", numeroPO: "PO1755", solicitante: "María Isabel Piñeyro", departamento: "Operaciones", descripcion: "Cable subterráneo 3x8AWG - 200m", categoria: "Normal", fecha: "10/07/2026", etapa: "Mercadería Entregada", proveedor: "Cables y Conductores del Ecuador",
-      aprobador: "Jorge Garcia Stael", fechaSolicitud: "10/07/2026", fechaOrden: "10/07/2026", fechaAprobacion: "11/07/2026", fechaEnvio: "12/07/2026", fechaEsperadaMaterial: "20/07/2026", fechaRecibido: "19/07/2026" },
-    { convId: "SOL-20260720-C4T8Q", numeroPO: "No aplica", solicitante: "Shirley Maya Chavez", departamento: "Administración", descripcion: "Camisas, pantalones y correas - Dotación (generada desde SC-20260720-SBAOV)", categoria: "Normal", fecha: "20/07/2026", etapa: "Por generar orden", proveedor: null,
-      aprobador: "Jorge Garcia Stael", fechaSolicitud: "20/07/2026", fechaOrden: null, fechaAprobacion: null, fechaEnvio: null, fechaEsperadaMaterial: null, fechaRecibido: null },
-  ];
+  const URL_FLUJO_DASHBOARD = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/04/workflows/a942c6538f94480a91cd1599080f404e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aWNKSYUYC7kFCx6Gd9kjoiEnaf-X25UciKQ3UGAZwhw";
+
+  // Traduce las etapas que calcula el flujo a las que espera el dashboard
+  function mapEtapaCot(etapa) {
+    const m = {
+      "Por cotizar": "Por cotizar",
+      "Por seleccionar proveedor": "Por seleccionar",
+      "Por aprobar": "Por seleccionar",
+      "Aprobada, pendiente generar OC": "Cotización cerrada",
+      "Convertida a Orden de Compra": "Cotización cerrada"
+    };
+    return m[etapa] || etapa || "Por cotizar";
+  }
+  function mapEtapaOc(etapa) {
+    const m = {
+      "Por aprobar": "Por aprobar",
+      "Por enviar a proveedor": "Por enviar a proveedor",
+      "Pendiente de entrega": "Enviada a proveedor",
+      "Mercadería Entregada": "Mercadería Entregada"
+    };
+    return m[etapa] || etapa || "Por aprobar";
+  }
+
+  async function cargarDatosReales() {
+    try {
+      const resp = await fetch(URL_FLUJO_DASHBOARD, { method: "POST" });
+      if (!resp.ok) throw new Error("Respuesta no válida: " + resp.status);
+      const data = await resp.json();
+
+      DATA_COT = (data.cotizaciones || []).map(d => ({
+        convId: d.ConvID,
+        solicitante: d.Administrador || "—",
+        departamento: d.Departamento || "—",
+        descripcion: d.Descripcion || "—",
+        urgencia: d.Urgencia || "Normal",
+        tipo: d.Tipo || "Local",
+        fecha: d.Fecha || "—",
+        etapa: mapEtapaCot(d.EtapaActual),
+        fechaSolicitud: d.Fecha || null,
+        fechaCotizado: null,
+        fechaSeleccion: null,
+        numeroPO: d.NumeroPO,
+        ocConvId: (d.OCGeneradas && d.OCGeneradas.trim()) ? d.OCGeneradas.trim() : null
+      }));
+
+      DATA_OC = (data.ordenesCompra || []).map(d => ({
+        convId: d.ConvID,
+        numeroPO: d.PO || "No aplica",
+        solicitante: d.Solicitante || "—",
+        departamento: d.Departamento || "—",
+        descripcion: d.Descripcion || "—",
+        categoria: d.Categoria || "Normal",
+        fecha: d.Fecha || "—",
+        etapa: mapEtapaOc(d.EtapaActual),
+        proveedor: d.Proveedor || null,
+        aprobador: d.Aprobador || "—",
+        fechaSolicitud: d.Fecha || null,
+        fechaOrden: d.Fecha || null,
+        fechaAprobacion: d.EtapaActual && d.EtapaActual !== "Por aprobar" ? "Sí" : null,
+        fechaEnvio: (d.EtapaActual === "Pendiente de entrega" || d.EtapaActual === "Mercadería Entregada") ? "Sí" : null,
+        fechaEsperadaMaterial: d.FechaEntregaEsperada || null,
+        fechaRecibido: d.FechaRecepcionReal || null
+      }));
+    } catch (e) {
+      console.error("No se pudo cargar el flujo de Power Automate:", e);
+      document.getElementById('tablaCotWrap').innerHTML = '<div class="empty">No se pudieron cargar los datos. Revisa la conexión con Power Automate.</div>';
+      document.getElementById('tablaOcWrap').innerHTML = '<div class="empty">No se pudieron cargar los datos. Revisa la conexión con Power Automate.</div>';
+    }
+  }
 
   function stageClassCot(etapa) {
     if (etapa === "Por cotizar") return "stage-1";
@@ -393,8 +434,15 @@
       select.appendChild(opt);
     });
   }
-  poblarSolicitantes('filtroSolicitanteCot', DATA_COT);
-  poblarSolicitantes('filtroSolicitanteOc', DATA_OC);
+  async function iniciar() {
+    document.getElementById('tablaCotWrap').innerHTML = '<div class="empty">Cargando datos...</div>';
+    document.getElementById('tablaOcWrap').innerHTML = '<div class="empty">Cargando datos...</div>';
+    await cargarDatosReales();
+    poblarSolicitantes('filtroSolicitanteCot', DATA_COT);
+    poblarSolicitantes('filtroSolicitanteOc', DATA_OC);
+    renderCot();
+    renderOc();
+  }
 
   function renderCot() {
     const buscar = document.getElementById('buscarCot').value.trim().toLowerCase();
@@ -596,8 +644,7 @@
     document.getElementById(id).addEventListener('change', renderOc);
   });
 
-  renderCot();
-  renderOc();
+  iniciar();
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
