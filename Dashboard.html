@@ -378,6 +378,12 @@
 
   function pasosOc(d) {
     const rechazada = d.etapa === "Rechazada";
+    // La etapa general (Estado en Excel) manda sobre el estado de cada paso —
+    // así no se desincroniza si alguna fecha específica no quedó registrada.
+    const yaAprobada = ["Por enviar a proveedor", "Enviada a proveedor", "Mercadería Entregada"].includes(d.etapa);
+    const yaEnviada = ["Enviada a proveedor", "Mercadería Entregada"].includes(d.etapa);
+    const yaRecibida = d.etapa === "Mercadería Entregada";
+
     const qsFlujo2 = new URLSearchParams({ convId: d.convId, solicitante: d.solicitante || '', division: d.departamento || '', categoria: d.categoria || '', referencia: d.descripcion || '' }).toString();
     const qsFlujo3 = new URLSearchParams({ convId: d.convId, solicitante: d.solicitante || '', division: d.departamento || '', categoria: d.categoria || '', referencia: d.descripcion || '', proveedor: d.proveedor || '' }).toString();
     const qsFlujo5 = new URLSearchParams({ convId: d.convId, proyecto: d.numeroPO || '', proveedor: d.proveedor || '', aprobador: d.aprobador || '', referencia: d.descripcion || '' }).toString();
@@ -387,13 +393,13 @@
         estado: d.fechaOrden ? "done" : "pending", fecha: d.fechaOrden,
         url: !d.fechaOrden ? ("flujo2_OC.html?" + qsFlujo2) : null },
       { nombre: "Aprobar Orden de Compra", responsable: d.aprobador + " (Aprobador)",
-        estado: rechazada ? "rejected" : (d.fechaAprobacion ? "done" : (d.fechaOrden ? "pending" : "skipped")), fecha: d.fechaAprobacion,
-        url: (d.fechaOrden && !d.fechaAprobacion && !rechazada) ? ("flujo3_aprobacion.html?" + qsFlujo3) : null },
+        estado: rechazada ? "rejected" : (yaAprobada ? "done" : (d.fechaOrden ? "pending" : "skipped")), fecha: d.fechaAprobacion,
+        url: (d.fechaOrden && !yaAprobada && !rechazada) ? ("flujo3_aprobacion.html?" + qsFlujo3) : null },
       { nombre: "Confirmar envío a proveedor", responsable: "Compras",
-        estado: rechazada ? "skipped" : (d.fechaEnvio ? "done" : (d.fechaAprobacion ? "pending" : "skipped")), fecha: d.fechaEnvio,
-        url: (d.fechaAprobacion && !d.fechaEnvio && !rechazada) ? ("flujo5_envio.html?" + qsFlujo5) : null },
+        estado: rechazada ? "skipped" : (yaEnviada ? "done" : (yaAprobada ? "pending" : "skipped")), fecha: d.fechaEnvio,
+        url: (yaAprobada && !yaEnviada && !rechazada) ? ("flujo5_envio.html?" + qsFlujo5) : null },
       { nombre: "Confirmar recepción de mercadería", responsable: "Mayra Rodríguez (Compras)" + (d.fechaEsperadaMaterial ? " · esperada " + d.fechaEsperadaMaterial : ""),
-        estado: rechazada ? "skipped" : (d.fechaRecibido ? "done" : (d.fechaEnvio ? "pending" : "skipped")), fecha: d.fechaRecibido },
+        estado: rechazada ? "skipped" : (yaRecibida ? "done" : (yaEnviada ? "pending" : "skipped")), fecha: d.fechaRecibido },
     ];
   }
 
