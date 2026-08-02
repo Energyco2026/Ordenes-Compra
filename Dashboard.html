@@ -164,6 +164,26 @@
     tbody td { border-bottom: none; padding: 6px 14px; }
     tbody td:before { content: attr(data-label); display: block; font-size: 10px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
   }
+
+  /* ===== Panel de Indicadores (privado) ===== */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  .kpi-card .num { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--navy-deep); }
+  .kpi-card .lbl { font-size: 10.5px; color: var(--ink-soft); margin-top: 2px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 800px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .chart-card .ct { font-size: 13.5px; font-weight: 600; color: var(--navy-deep); font-family: 'Space Grotesk', sans-serif; margin-bottom: 2px; }
+  .chart-card .cs { font-size: 11px; color: var(--ink-soft); margin: 0 0 12px; }
+  .hbar-list { display: flex; flex-direction: column; gap: 12px; }
+  .hbar-item .hbar-top { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; }
+  .hbar-item .hbar-name { color: var(--ink); font-weight: 600; }
+  .hbar-item .hbar-val { font-weight: 700; color: var(--navy-deep); font-family: 'Space Grotesk', sans-serif; }
+  .hbar-track { height: 10px; background: var(--paper); border-radius: 5px; overflow: hidden; }
+  .hbar-fill { height: 100%; border-radius: 5px; background: var(--navy); }
+  .hbar-fill.warn { background: var(--warning); }
+  .hbar-fill.danger { background: var(--danger); }
+  .hbar-fill.green { background: var(--green); }
 </style>
 </head>
 <body>
@@ -178,6 +198,23 @@
   <div class="tabs">
     <button class="tab-btn cot active" data-tab="cot"><span class="dot"></span> Solicitud de Cotización <span class="count-pill" id="countCot">0</span></button>
     <button class="tab-btn oc" data-tab="oc"><span class="dot"></span> Órdenes de Compra <span class="count-pill" id="countOc">0</span></button>
+    <button class="tab-btn kpi" data-tab="kpi" id="tabBtnKpi" style="display:none;"><span class="dot" style="background:var(--danger);"></span> Indicadores 🔒</button>
+  </div>
+
+  <!-- ===================== PESTAÑA INDICADORES (privada) ===================== -->
+  <div class="tab-panel" id="panel-kpi">
+    <div id="kpiGate" class="empty" style="max-width:340px;margin:20px auto;text-align:center;padding:28px 24px;">
+      <p style="font-size:13px;font-weight:600;color:var(--navy-deep);margin:0 0 4px;">Panel de Indicadores</p>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:0 0 14px;">Acceso restringido — solo gerencia</p>
+      <input type="password" id="kpiClaveInput" placeholder="Código de acceso" autocomplete="off"
+        style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:7px;font-size:14px;text-align:center;letter-spacing:.08em;margin-bottom:10px;">
+      <button type="button" id="kpiBtnEntrar" style="width:100%;padding:10px;border:none;border-radius:7px;background:var(--navy);color:#fff;font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;">Entrar</button>
+      <div id="kpiGateError" style="color:var(--danger);font-size:11.5px;margin-top:8px;display:none;">Código incorrecto.</div>
+    </div>
+    <div id="kpiContenido" style="display:none;">
+      <div class="kpi-row" id="kpiResumen"></div>
+      <div class="chart-grid" id="kpiCharts"></div>
+    </div>
   </div>
 
   <!-- ===================== PESTAÑA COTIZACIÓN ===================== -->
@@ -674,6 +711,137 @@
       document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
     });
   });
+
+  // ============ PESTAÑA PRIVADA DE INDICADORES ============
+  // Solo aparece con ?panel=1 en la URL. Nadie sin ese link sabe que existe.
+  const paramsPagina = new URLSearchParams(window.location.search);
+  if (paramsPagina.get('panel') === '1') {
+    document.getElementById('tabBtnKpi').style.display = '';
+  }
+
+  // ⚠️ Cambia esta clave antes de subir el archivo
+  const CLAVE_ACCESO_KPI = "gerencia2026";
+
+  document.getElementById('kpiBtnEntrar').addEventListener('click', intentarEntrarKpi);
+  document.getElementById('kpiClaveInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') intentarEntrarKpi(); });
+
+  function intentarEntrarKpi() {
+    const val = document.getElementById('kpiClaveInput').value;
+    if (val === CLAVE_ACCESO_KPI) {
+      document.getElementById('kpiGate').style.display = 'none';
+      document.getElementById('kpiContenido').style.display = 'block';
+      renderKpis();
+    } else {
+      document.getElementById('kpiGateError').style.display = 'block';
+    }
+  }
+
+  function parseFechaKpi(str) {
+    if (!str) return null;
+    const partes = String(str).split('/').map(Number);
+    if (partes.length !== 3 || partes.some(isNaN)) return null;
+    const [d, m, y] = partes;
+    return new Date(y, m - 1, d);
+  }
+  function diffDiasKpi(inicioStr, finStr) {
+    const a = parseFechaKpi(inicioStr), b = parseFechaKpi(finStr);
+    if (!a || !b) return null;
+    return Math.round((b - a) / (1000 * 60 * 60 * 24));
+  }
+  function promedioKpi(arr) {
+    const nums = arr.filter(n => n !== null && !isNaN(n) && n >= 0);
+    if (!nums.length) return null;
+    return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10;
+  }
+  function colorPorUmbral(valor, umbralWarn, umbralDanger, invertido) {
+    if (invertido) {
+      if (valor <= umbralDanger) return 'danger';
+      if (valor <= umbralWarn) return 'warn';
+      return 'green';
+    }
+    if (valor >= umbralDanger) return 'danger';
+    if (valor >= umbralWarn) return 'warn';
+    return '';
+  }
+  function hbarListHtml(items, maxVal, sufijo) {
+    return `<div class="hbar-list">` + items.map(it => `
+      <div class="hbar-item">
+        <div class="hbar-top"><span class="hbar-name">${it.nombre}</span><span class="hbar-val">${it.valor}${sufijo || ''}</span></div>
+        <div class="hbar-track"><div class="hbar-fill ${it.clase}" style="width:${maxVal > 0 ? Math.min(100, (it.valor / maxVal) * 100) : 0}%"></div></div>
+      </div>`).join('') + `</div>`;
+  }
+
+  function renderKpis() {
+    const oc = DATA_OC; // reutiliza los mismos datos ya cargados del dashboard
+
+    const diasGenerarOrden = oc.map(d => diffDiasKpi(d.fechaSolicitud, d.fechaOrden));
+    const diasAprobar = oc.map(d => diffDiasKpi(d.fechaOrden, d.fechaAprobacion));
+    const diasEnviar = oc.map(d => diffDiasKpi(d.fechaAprobacion, d.fechaEnvio));
+    const diasCiclo = oc.map(d => diffDiasKpi(d.fechaSolicitud, d.fechaRecibido));
+
+    document.getElementById('kpiResumen').innerHTML = `
+      <div class="kpi-card"><div class="num">${promedioKpi(diasGenerarOrden) ?? '—'}</div><div class="lbl">Días en generar la orden</div></div>
+      <div class="kpi-card"><div class="num">${promedioKpi(diasAprobar) ?? '—'}</div><div class="lbl">Días en aprobar</div></div>
+      <div class="kpi-card"><div class="num">${promedioKpi(diasEnviar) ?? '—'}</div><div class="lbl">Días en enviar a proveedor</div></div>
+      <div class="kpi-card"><div class="num">${promedioKpi(diasCiclo) ?? '—'}</div><div class="lbl">Días del ciclo completo</div></div>
+      <div class="kpi-card"><div class="num">${oc.length}</div><div class="lbl">Órdenes analizadas</div></div>
+    `;
+
+    // Urgencia por administrador
+    const porAdmin = {};
+    oc.forEach(d => {
+      if (!porAdmin[d.solicitante]) porAdmin[d.solicitante] = { total: 0, urgentes: 0 };
+      porAdmin[d.solicitante].total++;
+      if (d.categoria === 'Urgente' || d.categoria === 'Crítica') porAdmin[d.solicitante].urgentes++;
+    });
+    const itemsUrgencia = Object.entries(porAdmin)
+      .map(([nombre, v]) => ({ nombre, valor: Math.round((v.urgentes / v.total) * 100), clase: colorPorUmbral(Math.round((v.urgentes / v.total) * 100), 25, 50) }))
+      .sort((a, b) => b.valor - a.valor);
+
+    // Tiempo de aprobación por aprobador
+    const porAprobador = {};
+    oc.forEach(d => {
+      const dias = diffDiasKpi(d.fechaOrden, d.fechaAprobacion);
+      if (dias === null) return;
+      if (!porAprobador[d.aprobador]) porAprobador[d.aprobador] = [];
+      porAprobador[d.aprobador].push(dias);
+    });
+    const itemsAprobadores = Object.entries(porAprobador)
+      .map(([nombre, arr]) => ({ nombre, valor: promedioKpi(arr), clase: colorPorUmbral(promedioKpi(arr), 1.5, 3) }))
+      .filter(it => it.valor !== null)
+      .sort((a, b) => b.valor - a.valor);
+    const maxAprob = Math.max(1, ...itemsAprobadores.map(it => it.valor));
+
+    // Cumplimiento de proveedores
+    const porProveedor = {};
+    oc.forEach(d => {
+      if (!d.fechaEsperadaMaterial || !d.fechaRecibido) return;
+      if (!porProveedor[d.proveedor]) porProveedor[d.proveedor] = { total: 0, aTiempo: 0 };
+      porProveedor[d.proveedor].total++;
+      const esperada = parseFechaKpi(d.fechaEsperadaMaterial);
+      const recibida = parseFechaKpi(d.fechaRecibido);
+      if (esperada && recibida && recibida <= esperada) porProveedor[d.proveedor].aTiempo++;
+    });
+    const itemsProveedores = Object.entries(porProveedor)
+      .map(([nombre, v]) => ({ nombre, valor: Math.round((v.aTiempo / v.total) * 100), clase: colorPorUmbral(Math.round((v.aTiempo / v.total) * 100), 50, 80, true) }))
+      .sort((a, b) => b.valor - a.valor);
+
+    let chartsHtml = '';
+    chartsHtml += `<div class="chart-card"><div class="ct">Urgencia por administrador</div><div class="cs">% de solicitudes Urgente/Crítica sobre su total</div>` +
+      (itemsUrgencia.length ? hbarListHtml(itemsUrgencia, 100, '%') : '<div class="empty">Sin datos.</div>') + `</div>`;
+    chartsHtml += `<div class="chart-card"><div class="ct">Tiempo de aprobación por aprobador</div><div class="cs">Promedio de días entre orden generada y aprobada</div>` +
+      (itemsAprobadores.length ? hbarListHtml(itemsAprobadores, maxAprob, ' d') : '<div class="empty">Sin datos.</div>') + `</div>`;
+    chartsHtml += `<div class="chart-card"><div class="ct">Cumplimiento de proveedores</div><div class="cs">% de entregas a tiempo</div>` +
+      (itemsProveedores.length ? hbarListHtml(itemsProveedores, 100, '%') : '<div class="empty">Sin entregas confirmadas todavía.</div>') + `</div>`;
+    chartsHtml += `<div class="chart-card"><div class="ct">Desglose del ciclo (promedio en días)</div><div class="cs">Dónde se va el tiempo, de solicitud a recepción</div>` +
+      hbarListHtml([
+        { nombre: 'Generar orden', valor: promedioKpi(diasGenerarOrden) ?? 0, clase: '' },
+        { nombre: 'Aprobar', valor: promedioKpi(diasAprobar) ?? 0, clase: '' },
+        { nombre: 'Enviar a proveedor', valor: promedioKpi(diasEnviar) ?? 0, clase: '' }
+      ], Math.max(1, promedioKpi(diasGenerarOrden) || 0, promedioKpi(diasAprobar) || 0, promedioKpi(diasEnviar) || 0), ' d') + `</div>`;
+
+    document.getElementById('kpiCharts').innerHTML = chartsHtml;
+  }
 </script>
 </body>
 </html>
