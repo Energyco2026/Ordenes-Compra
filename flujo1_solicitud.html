@@ -406,6 +406,11 @@
   const form = document.getElementById('formSolicitud');
   const btn = document.getElementById('btnEnviar');
   const successBox = document.getElementById('success');
+  function formatearFecha(d) {
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}/${d.getFullYear()}`;
+  }
   function generarConvId() {
     const fecha = new Date();
     const yyyymmdd = fecha.toISOString().slice(0,10).replace(/-/g,'');
@@ -448,7 +453,7 @@
       convId: convId,
       correoSolicitante: solicitanteOpt.value,
       nombreSolicitante: solicitanteOpt.dataset.nombre,
-      fecha: ahora.toLocaleDateString('es-EC'),
+      fecha: formatearFecha(ahora),
       mes: ahora.toLocaleString('es-EC', { month: 'long' }),
       hora: ahora.toLocaleTimeString('es-EC'),
       forma: "Formulario Web",
