@@ -228,6 +228,10 @@
       <input type="text" id="proveedorSugerido" name="proveedorSugerido" placeholder="Nombre del proveedor" required>
     </div>
     <div class="field">
+      <label for="correoProveedor">Correo del proveedor</label>
+      <input type="email" id="correoProveedor" name="correoProveedor" multiple placeholder="ejemplo@proveedor.com, otro@proveedor.com" required>
+    </div>
+    <div class="field">
       <label>Cotización de referencia (PDF, Excel, Word o JPG)</label>
       <div class="dropzone" id="dropzoneRef">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 15V3m0 0L7 8m5-5l5 5M4 17v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
@@ -421,6 +425,10 @@
       alert('Por favor ingresa el motivo.');
       return;
     }
+    if (!document.getElementById('correoProveedor').value.trim()) {
+      alert('Por favor ingresa el correo del proveedor.');
+      return;
+    }
     if (!archivoRefBase64) {
       alert('Por favor adjunta la cotización de referencia.');
       return;
@@ -451,6 +459,7 @@
       pedidoCotizacion: pedidoAplicaVal === 'Si' ? document.getElementById('pedido').value : '',
       motivo: pedidoAplicaVal === 'No' ? document.getElementById('motivo').value : '',
       proveedorSugerido: document.getElementById('proveedorSugerido').value,
+      correoProveedor: document.getElementById('correoProveedor').value,
       archivoReferenciaNombre: archivoRefNombre || "",
       archivoReferenciaBase64: archivoRefBase64 || "",
       referencia: document.getElementById('referencia').value,
