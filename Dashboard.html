@@ -212,6 +212,11 @@
       <div id="kpiGateError" style="color:var(--danger);font-size:11.5px;margin-top:8px;display:none;">Código incorrecto.</div>
     </div>
     <div id="kpiContenido" style="display:none;">
+      <div class="toolbar">
+        <select id="filtroMesKpi">
+          <option value="">Todos los meses</option>
+        </select>
+      </div>
       <div class="kpi-row" id="kpiResumen"></div>
       <div class="chart-grid" id="kpiCharts"></div>
     </div>
@@ -221,6 +226,9 @@
   <div class="tab-panel active" id="panel-cot">
     <div class="toolbar">
       <input type="text" id="buscarCot" placeholder="Buscar por administrador o ConvID...">
+      <select id="filtroMesCot">
+        <option value="">Todos los meses</option>
+      </select>
       <select id="filtroEtapaCot">
         <option value="">Todas las etapas</option>
         <option value="Por cotizar">Por cotizar</option>
@@ -243,6 +251,9 @@
   <div class="tab-panel" id="panel-oc">
     <div class="toolbar">
       <input type="text" id="buscarOc" placeholder="Buscar por administrador, ConvID o PO...">
+      <select id="filtroMesOc">
+        <option value="">Todos los meses</option>
+      </select>
       <select id="filtroEtapaOc">
         <option value="">Todas las etapas</option>
         <option value="Por generar orden">Por generar orden</option>
@@ -274,6 +285,13 @@
   let DATA_OC = [];
 
   const URL_FLUJO_DASHBOARD = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/04/workflows/a942c6538f94480a91cd1599080f404e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aWNKSYUYC7kFCx6Gd9kjoiEnaf-X25UciKQ3UGAZwhw";
+
+  // Mismo trigger que usa flujo1_solicitud.html — al reutilizarlo, la OC generada desde
+  // el dashboard sigue exactamente el mismo camino (Excel + correo a Nicolás) que la manual.
+  const URL_FLUJO1 = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/10/workflows/d6c73161d17745d7ad29ddfc07049dd9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=o5RCiJJzG54T_i8ddBkC7SqDRkygsxCDE2FyMyexxxw";
+  const CLAVE_SISTEMA = "y-1s4NVy6FMgR7HvpxbwVbP7puLo8KlP";
+
+  const NOMBRES_MES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
   // Traduce las etapas que calcula el flujo a las que espera el dashboard
   function mapEtapaCot(etapa) {
@@ -378,8 +396,6 @@
 
   function pasosOc(d) {
     const rechazada = d.etapa === "Rechazada";
-    // La etapa general (Estado en Excel) manda sobre el estado de cada paso —
-    // así no se desincroniza si alguna fecha específica no quedó registrada.
     const yaAprobada = ["Por enviar a proveedor", "Enviada a proveedor", "Mercadería Entregada"].includes(d.etapa);
     const yaEnviada = ["Enviada a proveedor", "Mercadería Entregada"].includes(d.etapa);
     const yaRecibida = d.etapa === "Mercadería Entregada";
@@ -456,6 +472,35 @@
             <option value="No definida aún">No definida aún</option>
           </select>
         </div>
+        <div class="oc-field">
+          <label>Proveedor</label>
+          <input type="text" id="oc-proveedor-${i}" placeholder="Nombre del proveedor">
+        </div>
+        <div class="oc-field">
+          <label>Correo del proveedor</label>
+          <input type="email" id="oc-correoproveedor-${i}" multiple placeholder="ejemplo@proveedor.com, otro@proveedor.com">
+        </div>
+        <div class="oc-field">
+          <label>¿Aplica número de PO?</label>
+          <div class="oc-chip-group">
+            <label class="oc-chip-opt">
+              <input type="radio" name="oc-pedidoaplica-${i}" value="Si" id="oc-pedidoaplicasi-${i}">
+              <span>Sí aplica</span>
+            </label>
+            <label class="oc-chip-opt">
+              <input type="radio" name="oc-pedidoaplica-${i}" value="No" id="oc-pedidoaplicano-${i}" checked>
+              <span>No aplica</span>
+            </label>
+          </div>
+        </div>
+        <div class="oc-field" id="oc-pedidowrapsi-${i}" style="display:none;">
+          <label>Número de PO</label>
+          <input type="text" id="oc-pedido-${i}" placeholder="Ej. PO1727...">
+        </div>
+        <div class="oc-field" id="oc-pedidowrapno-${i}">
+          <label>Motivo</label>
+          <input type="text" id="oc-motivo-${i}" placeholder="Ej. Administración, Stock...">
+        </div>
         <div class="oc-row2 oc-field">
           <div>
             <label>Dónde entregar la mercadería</label>
@@ -480,12 +525,38 @@
       select.appendChild(opt);
     });
   }
+
+  // Extrae "yyyy-mm" de una fecha en formato "d/m/yyyy"
+  function mesAnioDeFecha(fechaStr) {
+    if (!fechaStr) return null;
+    const partes = String(fechaStr).split('/');
+    if (partes.length !== 3) return null;
+    const [d, m, y] = partes;
+    if (!y || !m || isNaN(Number(m)) || isNaN(Number(y))) return null;
+    return `${y}-${String(m).padStart(2, '0')}`;
+  }
+  function poblarMeses(selectId, data) {
+    const select = document.getElementById(selectId);
+    while (select.options.length > 1) select.remove(1);
+    const claves = [...new Set(data.map(d => mesAnioDeFecha(d.fecha)).filter(Boolean))].sort().reverse();
+    claves.forEach(clave => {
+      const [y, m] = clave.split('-');
+      const opt = document.createElement('option');
+      opt.value = clave;
+      opt.textContent = NOMBRES_MES[Number(m) - 1] + ' ' + y;
+      select.appendChild(opt);
+    });
+  }
+
   async function iniciar() {
     document.getElementById('tablaCotWrap').innerHTML = '<div class="empty">Cargando datos...</div>';
     document.getElementById('tablaOcWrap').innerHTML = '<div class="empty">Cargando datos...</div>';
     await cargarDatosReales();
     poblarSolicitantes('filtroSolicitanteCot', DATA_COT);
     poblarSolicitantes('filtroSolicitanteOc', DATA_OC);
+    poblarMeses('filtroMesCot', DATA_COT);
+    poblarMeses('filtroMesOc', DATA_OC);
+    poblarMeses('filtroMesKpi', DATA_OC);
     renderCot();
     renderOc();
   }
@@ -495,12 +566,14 @@
     const etapaF = document.getElementById('filtroEtapaCot').value;
     const urgF = document.getElementById('filtroUrgCot').value;
     const solF = document.getElementById('filtroSolicitanteCot').value;
+    const mesF = document.getElementById('filtroMesCot').value;
 
     const filtrado = DATA_COT.filter(d =>
       (!buscar || d.convId.toLowerCase().includes(buscar) || d.solicitante.toLowerCase().includes(buscar)) &&
       (!etapaF || d.etapa === etapaF) &&
       (!urgF || d.urgencia === urgF) &&
-      (!solF || d.solicitante === solF)
+      (!solF || d.solicitante === solF) &&
+      (!mesF || mesAnioDeFecha(d.fecha) === mesF)
     );
 
     document.getElementById('countCot').textContent = filtrado.length;
@@ -545,34 +618,95 @@
       });
     });
 
+    filtrado.forEach((d, i) => {
+      const si = document.getElementById('oc-pedidoaplicasi-' + i);
+      const no = document.getElementById('oc-pedidoaplicano-' + i);
+      if (!si || !no) return;
+      const wrapSi = document.getElementById('oc-pedidowrapsi-' + i);
+      const wrapNo = document.getElementById('oc-pedidowrapno-' + i);
+      const actualizar = () => {
+        wrapSi.style.display = si.checked ? 'block' : 'none';
+        wrapNo.style.display = si.checked ? 'none' : 'block';
+      };
+      si.addEventListener('change', actualizar);
+      no.addEventListener('change', actualizar);
+    });
+
     wrap.querySelectorAll('[data-confirmar-oc]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const i = btn.dataset.confirmarOc;
         const d = filtrado[i];
         const condiciones = document.getElementById('oc-condiciones-' + i).value;
         const lugar = document.getElementById('oc-lugar-' + i).value;
         const fechaEsperada = document.getElementById('oc-fecha-' + i).value;
+        const proveedor = document.getElementById('oc-proveedor-' + i).value.trim();
+        const correoProveedor = document.getElementById('oc-correoproveedor-' + i).value.trim();
+        const pedidoAplicaVal = document.querySelector('input[name="oc-pedidoaplica-' + i + '"]:checked').value;
+        const pedido = document.getElementById('oc-pedido-' + i).value.trim();
+        const motivo = document.getElementById('oc-motivo-' + i).value.trim();
 
-        if (!condiciones || !lugar || !fechaEsperada) {
-          alert('Completa Condiciones de pago, Lugar de entrega y Fecha esperada del material.');
+        if (!condiciones || !lugar || !fechaEsperada || !proveedor || !correoProveedor) {
+          alert('Completa Proveedor, Correo del proveedor, Condiciones de pago, Lugar de entrega y Fecha esperada del material.');
           return;
         }
+        if (pedidoAplicaVal === 'Si' && !pedido) { alert('Ingresa el número de PO.'); return; }
+        if (pedidoAplicaVal === 'No' && !motivo) { alert('Ingresa el motivo.'); return; }
 
         const nuevoConvId = 'SOL-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.random().toString(36).slice(2,7).toUpperCase();
-        DATA_OC.unshift({
-          convId: nuevoConvId, numeroPO: "No aplica", solicitante: d.solicitante, departamento: d.departamento,
-          descripcion: d.descripcion + ' (generada desde ' + d.convId + ')', categoria: d.urgencia,
-          fecha: new Date().toLocaleDateString('es-EC'), etapa: "Por generar orden",
-          aprobador: "Por definir", fechaSolicitud: new Date().toLocaleDateString('es-EC'),
-          fechaOrden: null, fechaAprobacion: null, fechaEnvio: null,
-          tipo: d.tipo, condicionesDePago: condiciones, lugarEntrega: lugar, fechaEsperadaMaterial: fechaEsperada
-        });
-        d.ocConvId = nuevoConvId;
+        const ahora = new Date();
+        const dd = String(ahora.getDate()).padStart(2, '0');
+        const mm = String(ahora.getMonth() + 1).padStart(2, '0');
+        const NOMBRES_MES_PAYLOAD = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-        alert('Orden de Compra ' + nuevoConvId + ' generada y enviada directo a Nicolás (Compras). Puedes verla en la pestaña de Órdenes de Compra.');
-        renderCot();
-        renderOc();
+        // NOTA: correoSolicitante y proveedor no vienen todavía del flujo "Dashboard -
+        // Obtener Estado General" (solo el nombre del solicitante) — hay que agregar la
+        // columna "Correo Administrador" a la acción Seleccionar de Cotizaciones para que
+        // correoSolicitante deje de llegar vacío. Mientras tanto, Compras puede
+        // completarlo manualmente si el correo automático no le llega.
+        const payload = {
+          clave: CLAVE_SISTEMA,
+          etapa: "solicitud",
+          convId: nuevoConvId,
+          correoSolicitante: d.correoSolicitante || "",
+          nombreSolicitante: d.solicitante,
+          fecha: `${ahora.getFullYear()}-${mm}-${dd}`,
+          mes: NOMBRES_MES_PAYLOAD[ahora.getMonth()],
+          hora: ahora.toLocaleTimeString('es-EC'),
+          forma: "Dashboard (desde Cotización)",
+          tipo: d.tipo || "Local",
+          condicionesDePago: condiciones,
+          division: d.departamento,
+          pedidoAplica: pedidoAplicaVal,
+          pedidoCotizacion: pedidoAplicaVal === 'Si' ? pedido : '',
+          motivo: pedidoAplicaVal === 'No' ? motivo : '',
+          proveedorSugerido: proveedor,
+          correoProveedor: correoProveedor,
+          archivoReferenciaNombre: "",
+          archivoReferenciaBase64: "",
+          referencia: d.descripcion + ' (generado desde ' + d.convId + ')',
+          categoria: d.urgencia || "Normal",
+          lugarEntrega: lugar,
+          fechaRequerida: fechaEsperada
+        };
+
+        btn.disabled = true;
+        btn.textContent = "Generando...";
+        try {
+          const resp = await fetch(URL_FLUJO1, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!resp.ok) throw new Error('Respuesta no válida del flujo: ' + resp.status);
+          d.ocConvId = nuevoConvId;
+          alert('Orden de Compra ' + nuevoConvId + ' generada y enviada a Nicolás (Compras). Puedes verla en la pestaña de Órdenes de Compra en unos segundos.');
+          renderCot();
+        } catch (err) {
+          alert('No se pudo generar la Orden de Compra. Intenta de nuevo. (' + err.message + ')');
+          btn.disabled = false;
+          btn.textContent = "Confirmar y generar Orden de Compra";
+        }
       });
     });
   }
@@ -589,6 +723,11 @@
       const m = String(fecha.getUTCMonth() + 1).padStart(2, '0');
       const y = fecha.getUTCFullYear();
       return `${d}/${m}/${y}`;
+    }
+    // Fecha en formato ISO (AAAA-MM-DD, con o sin hora) — la convertimos a d/m/yyyy
+    const iso = String(valor).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) {
+      return `${iso[3]}/${iso[2]}/${iso[1]}`;
     }
     return valor;
   }
@@ -628,12 +767,14 @@
     const etapaF = document.getElementById('filtroEtapaOc').value;
     const urgF = document.getElementById('filtroUrgOc').value;
     const solF = document.getElementById('filtroSolicitanteOc').value;
+    const mesF = document.getElementById('filtroMesOc').value;
 
     const filtrado = DATA_OC.filter(d =>
       (!buscar || d.convId.toLowerCase().includes(buscar) || (d.numeroPO || '').toLowerCase().includes(buscar) || d.solicitante.toLowerCase().includes(buscar)) &&
       (!etapaF || d.etapa === etapaF) &&
       (!urgF || d.categoria === urgF) &&
-      (!solF || d.solicitante === solF)
+      (!solF || d.solicitante === solF) &&
+      (!mesF || mesAnioDeFecha(d.fecha) === mesF)
     );
 
     document.getElementById('countOc').textContent = filtrado.length;
@@ -698,11 +839,11 @@
     });
   }
 
-  ['buscarCot','filtroEtapaCot','filtroUrgCot','filtroSolicitanteCot'].forEach(id => {
+  ['buscarCot','filtroMesCot','filtroEtapaCot','filtroUrgCot','filtroSolicitanteCot'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderCot);
     document.getElementById(id).addEventListener('change', renderCot);
   });
-  ['buscarOc','filtroEtapaOc','filtroUrgOc','filtroSolicitanteOc'].forEach(id => {
+  ['buscarOc','filtroMesOc','filtroEtapaOc','filtroUrgOc','filtroSolicitanteOc'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderOc);
     document.getElementById(id).addEventListener('change', renderOc);
   });
@@ -730,6 +871,7 @@
 
   document.getElementById('kpiBtnEntrar').addEventListener('click', intentarEntrarKpi);
   document.getElementById('kpiClaveInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') intentarEntrarKpi(); });
+  document.getElementById('filtroMesKpi').addEventListener('change', renderKpis);
 
   function intentarEntrarKpi() {
     const val = document.getElementById('kpiClaveInput').value;
@@ -778,7 +920,8 @@
   }
 
   function renderKpis() {
-    const oc = DATA_OC; // reutiliza los mismos datos ya cargados del dashboard
+    const mesF = document.getElementById('filtroMesKpi').value;
+    const oc = DATA_OC.filter(d => !mesF || mesAnioDeFecha(d.fecha) === mesF);
 
     const diasGenerarOrden = oc.map(d => diffDiasKpi(d.fechaSolicitud, d.fechaOrden));
     const diasAprobar = oc.map(d => diffDiasKpi(d.fechaOrden, d.fechaAprobacion));
