@@ -348,7 +348,7 @@
         proveedor: d.Proveedor || null,
         aprobador: d.Aprobador || "—",
         fechaSolicitud: excelSerialADate(d.FechaSolicitud),
-        fechaOrden: excelSerialADate(d.FechaOrden),
+        fechaOrden: excelSerialADate(d.FechaOrden, true),
         fechaAprobacion: excelSerialADate(d.FechaAprobacion),
         fechaEnvio: excelSerialADate(d.FechaEnvio),
         fechaEsperadaMaterial: excelSerialADate(d.FechaEntregaEsperada),
@@ -713,7 +713,10 @@
 
   // Convierte un número de serie de fecha de Excel (ej. 46234) a "d/m/yyyy".
   // Si el valor ya viene como texto de fecha, lo deja igual.
-  function excelSerialADate(valor) {
+ // Convierte un número de serie de fecha de Excel (ej. 46234) a "d/m/yyyy".
+  // Si el valor ya viene como texto de fecha, lo deja igual — salvo que forzarFormatoUS
+  // sea true, en cuyo caso interpreta el texto "m/d/yyyy" (formato EE.UU.) y lo voltea.
+  function excelSerialADate(valor, forzarFormatoUS) {
     if (valor === null || valor === undefined || valor === '') return null;
     if (typeof valor === 'number' || /^\d+(\.\d+)?$/.test(String(valor).trim())) {
       const serial = parseFloat(valor);
@@ -728,6 +731,15 @@
     const iso = String(valor).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (iso) {
       return `${iso[3]}/${iso[2]}/${iso[1]}`;
+    }
+    // Fecha de texto tipo "8/5/2026" (mes/día/año, formato EE.UU.) — pasa esto solo
+    // si el campo se guarda así en Excel (ej. la columna "Fecha " de Generar Orden de Compra)
+    if (forzarFormatoUS) {
+      const us = String(valor).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (us) {
+        const [, m, d, y] = us;
+        return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
+      }
     }
     return valor;
   }
