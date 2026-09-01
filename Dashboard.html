@@ -197,7 +197,8 @@
 
   <div class="tabs">
     <button class="tab-btn cot active" data-tab="cot"><span class="dot"></span> Solicitud de Cotización <span class="count-pill" id="countCot">0</span></button>
-    <button class="tab-btn oc" data-tab="oc"><span class="dot"></span> Órdenes de Compra <span class="count-pill" id="countOc">0</span></button>
+    <button class="tab-btn oc" data-tab="oc"><span class="dot"></span> Órdenes Abiertas <span class="count-pill" id="countOc">0</span></button>
+    <button class="tab-btn oc" data-tab="oc-procesadas"><span class="dot" style="background:var(--green-deep);"></span> Órdenes Procesadas <span class="count-pill" id="countOcProc">0</span></button>
     <button class="tab-btn kpi" data-tab="kpi" id="tabBtnKpi" style="display:none;"><span class="dot" style="background:var(--danger);"></span> Indicadores 🔒</button>
   </div>
 
@@ -260,7 +261,6 @@
         <option value="Por aprobar">Por aprobar</option>
         <option value="Por enviar a proveedor">Por enviar a proveedor</option>
         <option value="Enviada a proveedor">Enviada a proveedor</option>
-        <option value="Mercadería Entregada">Mercadería Entregada</option>
         <option value="Rechazada">Rechazada</option>
       </select>
       <select id="filtroUrgOc">
@@ -274,6 +274,20 @@
       </select>
     </div>
     <div id="tablaOcWrap"></div>
+  </div>
+
+  <!-- ===================== PESTAÑA ÓRDENES PROCESADAS ===================== -->
+  <div class="tab-panel" id="panel-oc-procesadas">
+    <div class="toolbar">
+      <input type="text" id="buscarOcProc" placeholder="Buscar por administrador, ConvID o PO...">
+      <select id="filtroMesOcProc">
+        <option value="">Todos los meses</option>
+      </select>
+      <select id="filtroSolicitanteOcProc">
+        <option value="">Todo solicitante</option>
+      </select>
+    </div>
+    <div id="tablaOcProcWrap"></div>
   </div>
 
   <p class="note">Datos en vivo desde Excel, vía el flujo de Power Automate.</p>
@@ -551,14 +565,18 @@
   async function iniciar() {
     document.getElementById('tablaCotWrap').innerHTML = '<div class="empty">Cargando datos...</div>';
     document.getElementById('tablaOcWrap').innerHTML = '<div class="empty">Cargando datos...</div>';
+    document.getElementById('tablaOcProcWrap').innerHTML = '<div class="empty">Cargando datos...</div>';
     await cargarDatosReales();
     poblarSolicitantes('filtroSolicitanteCot', DATA_COT);
     poblarSolicitantes('filtroSolicitanteOc', DATA_OC);
+    poblarSolicitantes('filtroSolicitanteOcProc', DATA_OC);
     poblarMeses('filtroMesCot', DATA_COT);
     poblarMeses('filtroMesOc', DATA_OC);
+    poblarMeses('filtroMesOcProc', DATA_OC);
     poblarMeses('filtroMesKpi', DATA_OC);
     renderCot();
     renderOc();
+    renderOcProcesadas();
   }
 
   function renderCot() {
@@ -782,6 +800,7 @@
     const mesF = document.getElementById('filtroMesOc').value;
 
     const filtrado = DATA_OC.filter(d =>
+      d.etapa !== "Mercadería Entregada" &&
       (!buscar || d.convId.toLowerCase().includes(buscar) || (d.numeroPO || '').toLowerCase().includes(buscar) || d.solicitante.toLowerCase().includes(buscar)) &&
       (!etapaF || d.etapa === etapaF) &&
       (!urgF || d.categoria === urgF) &&
@@ -791,7 +810,7 @@
 
     document.getElementById('countOc').textContent = filtrado.length;
     const wrap = document.getElementById('tablaOcWrap');
-    if (!filtrado.length) { wrap.innerHTML = '<div class="empty">No hay solicitudes que coincidan con el filtro.</div>'; return; }
+    if (!filtrado.length) { wrap.innerHTML = '<div class="empty">No hay órdenes abiertas que coincidan con el filtro.</div>'; return; }
 
     wrap.innerHTML = `<table><thead><tr>
       <th>Folio</th><th>PO</th><th>Solicitante</th><th>Proveedor</th><th>Descripción</th><th>Categoría</th><th>Fecha</th><th>Entrega esperada</th><th>Etapa actual</th>
@@ -847,6 +866,55 @@
         d.fechaRecibido = `${day}/${m}/${y}`;
         d.etapa = "Mercadería Entregada";
         renderOc();
+        renderOcProcesadas();
+        switchTab('oc-procesadas');
+      });
+    });
+  }
+
+  function renderOcProcesadas() {
+    const buscar = document.getElementById('buscarOcProc').value.trim().toLowerCase();
+    const solF = document.getElementById('filtroSolicitanteOcProc').value;
+    const mesF = document.getElementById('filtroMesOcProc').value;
+
+    const filtrado = DATA_OC.filter(d =>
+      d.etapa === "Mercadería Entregada" &&
+      (!buscar || d.convId.toLowerCase().includes(buscar) || (d.numeroPO || '').toLowerCase().includes(buscar) || d.solicitante.toLowerCase().includes(buscar)) &&
+      (!solF || d.solicitante === solF) &&
+      (!mesF || mesAnioDeFecha(d.fecha) === mesF)
+    );
+
+    document.getElementById('countOcProc').textContent = filtrado.length;
+    const wrap = document.getElementById('tablaOcProcWrap');
+    if (!filtrado.length) { wrap.innerHTML = '<div class="empty">Todavía no hay órdenes procesadas.</div>'; return; }
+
+    wrap.innerHTML = `<table><thead><tr>
+      <th>Folio</th><th>PO</th><th>Solicitante</th><th>Proveedor</th><th>Descripción</th><th>Fecha</th><th>Recibido</th><th>Etapa actual</th>
+    </tr></thead><tbody>` + filtrado.map((d, i) => `
+      <tr class="clickable" data-toggle="ocp-${i}">
+        <td data-label="Folio"><span class="folio">${d.convId}</span></td>
+        <td data-label="PO" class="muted">${d.numeroPO || "—"}</td>
+        <td data-label="Solicitante">${d.solicitante}</td>
+        <td data-label="Proveedor" class="muted">${d.proveedor || "—"}</td>
+        <td data-label="Descripción" class="desc">${d.descripcion}</td>
+        <td data-label="Fecha" class="muted">${d.fecha}</td>
+        <td data-label="Recibido" class="muted">${d.fechaRecibido || "—"}</td>
+        <td data-label="Etapa actual"><span class="badge ${stageClassOc(d.etapa)}">${d.etapa}</span></td>
+      </tr>
+      <tr class="detail-row" id="ocp-${i}" style="display:none;">
+        <td colspan="8">
+          <div class="detail-inner">
+            <div class="detail-title">Ruta de ${d.convId}${d.numeroPO ? ' · PO ' + d.numeroPO : ''}</div>
+            ${renderTimeline(pasosOc(d))}
+          </div>
+        </td>
+      </tr>`).join('') + `</tbody></table>`;
+
+    wrap.querySelectorAll('tr.clickable').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.dataset.toggle;
+        const detail = document.getElementById(id);
+        detail.style.display = detail.style.display === 'none' ? 'table-row' : 'none';
       });
     });
   }
@@ -859,16 +927,22 @@
     document.getElementById(id).addEventListener('input', renderOc);
     document.getElementById(id).addEventListener('change', renderOc);
   });
+  ['buscarOcProc','filtroMesOcProc','filtroSolicitanteOcProc'].forEach(id => {
+    document.getElementById(id).addEventListener('input', renderOcProcesadas);
+    document.getElementById(id).addEventListener('change', renderOcProcesadas);
+  });
 
   iniciar();
 
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-    });
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
   // ============ PESTAÑA PRIVADA DE INDICADORES ============
