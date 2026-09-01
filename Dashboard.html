@@ -63,6 +63,7 @@
   .badge.stage-4 { background: #E3EAF7; color: var(--navy); }
   .badge.stage-done { background: #EAF1E3; color: var(--green-deep); }
   .badge.stage-rechazada { background: #F7E4DE; color: var(--danger); }
+  .badge.stage-anulada { background: #EEF0EC; color: var(--ink-soft); }
 
   .urg { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; }
   .urg.normal { background: #E7ECF3; color: var(--navy-deep); }
@@ -92,6 +93,7 @@
   .step-dot.done { background: var(--green); color: #fff; }
   .step-dot.pending { background: #fff; border: 2px solid var(--warning); color: var(--warning); }
   .step-dot.rejected { background: var(--danger); color: #fff; }
+  .step-dot.cancelled { background: var(--ink-soft); color: #fff; }
   .step-dot.skipped { background: #fff; border: 2px solid var(--line); color: var(--ink-soft); }
   .step-body .step-name { font-size: 13px; font-weight: 600; color: var(--navy-deep); }
   .step-body .step-meta { font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
@@ -100,6 +102,7 @@
   .step-tag.done { background: #EAF1E3; color: var(--green-deep); }
   .step-tag.pending { background: #FBEFE4; color: #A85B1F; }
   .step-tag.rejected { background: #F7E4DE; color: var(--danger); }
+  .step-tag.cancelled { background: #EEF0EC; color: var(--ink-soft); }
   .step-tag.skipped { background: #EEF0EC; color: var(--ink-soft); }
 
   .step-goto {
@@ -283,6 +286,11 @@
       <select id="filtroMesOcProc">
         <option value="">Todos los meses</option>
       </select>
+      <select id="filtroEtapaOcProc">
+        <option value="">Todas las etapas</option>
+        <option value="Mercadería Entregada">Mercadería Entregada</option>
+        <option value="Anulada/Cancelada">Anulada/Cancelada</option>
+      </select>
       <select id="filtroSolicitanteOcProc">
         <option value="">Todo solicitante</option>
       </select>
@@ -323,7 +331,11 @@
       "Por aprobar": "Por aprobar",
       "Por enviar a proveedor": "Por enviar a proveedor",
       "Pendiente de entrega": "Enviada a proveedor",
-      "Mercadería Entregada": "Mercadería Entregada"
+      "Mercadería Entregada": "Mercadería Entregada",
+      "Anulada": "Anulada/Cancelada",
+      "Cancelada": "Anulada/Cancelada",
+      "Anulado": "Anulada/Cancelada",
+      "Cancelado": "Anulada/Cancelada"
     };
     return m[etapa] || etapa || "Por aprobar";
   }
@@ -386,6 +398,7 @@
     if (etapa === "Por enviar a proveedor") return "stage-4";
     if (etapa === "Enviada a proveedor") return "stage-4";
     if (etapa === "Mercadería Entregada") return "stage-done";
+    if (etapa === "Anulada/Cancelada") return "stage-anulada";
     if (etapa === "Rechazada") return "stage-rechazada";
     return "stage-1";
   }
@@ -410,38 +423,45 @@
 
   function pasosOc(d) {
     const rechazada = d.etapa === "Rechazada";
-    const yaAprobada = ["Por enviar a proveedor", "Enviada a proveedor", "Mercadería Entregada"].includes(d.etapa);
-    const yaEnviada = ["Enviada a proveedor", "Mercadería Entregada"].includes(d.etapa);
+    const anulada = d.etapa === "Anulada/Cancelada";
+    const yaAprobada = ["Por enviar a proveedor", "Enviada a proveedor", "Mercadería Entregada"].includes(d.etapa) || (anulada && !!d.fechaAprobacion);
+    const yaEnviada = ["Enviada a proveedor", "Mercadería Entregada"].includes(d.etapa) || (anulada && !!d.fechaEnvio);
     const yaRecibida = d.etapa === "Mercadería Entregada";
 
     const qsFlujo2 = new URLSearchParams({ convId: d.convId, solicitante: d.solicitante || '', division: d.departamento || '', categoria: d.categoria || '', referencia: d.descripcion || '' }).toString();
     const qsFlujo3 = new URLSearchParams({ convId: d.convId, solicitante: d.solicitante || '', division: d.departamento || '', categoria: d.categoria || '', referencia: d.descripcion || '', proveedor: d.proveedor || '' }).toString();
     const qsFlujo5 = new URLSearchParams({ convId: d.convId, proyecto: d.numeroPO || '', proveedor: d.proveedor || '', aprobador: d.aprobador || '', referencia: d.descripcion || '' }).toString();
-    return [
+    const pasos = [
       { nombre: "Solicitud de compra enviada", responsable: d.solicitante + " (Solicitante)", estado: "done", fecha: d.fechaSolicitud },
       { nombre: "Generar Orden de Compra", responsable: "Nicolás Parrales (Compras)",
         estado: d.fechaOrden ? "done" : "pending", fecha: d.fechaOrden,
         url: !d.fechaOrden ? ("flujo2_OC.html?" + qsFlujo2) : null },
       { nombre: "Aprobar Orden de Compra", responsable: d.aprobador + " (Aprobador)",
-        estado: rechazada ? "rejected" : (yaAprobada ? "done" : (d.fechaOrden ? "pending" : "skipped")), fecha: d.fechaAprobacion,
-        url: (d.fechaOrden && !yaAprobada && !rechazada) ? ("flujo3_aprobacion.html?" + qsFlujo3) : null },
+        estado: rechazada ? "rejected" : (yaAprobada ? "done" : (anulada ? "skipped" : (d.fechaOrden ? "pending" : "skipped"))), fecha: d.fechaAprobacion,
+        url: (d.fechaOrden && !yaAprobada && !rechazada && !anulada) ? ("flujo3_aprobacion.html?" + qsFlujo3) : null },
       { nombre: "Confirmar envío a proveedor", responsable: "Compras",
-        estado: rechazada ? "skipped" : (yaEnviada ? "done" : (yaAprobada ? "pending" : "skipped")), fecha: d.fechaEnvio,
-        url: (yaAprobada && !yaEnviada && !rechazada) ? ("flujo5_envio.html?" + qsFlujo5) : null },
+        estado: rechazada ? "skipped" : (yaEnviada ? "done" : (anulada ? "skipped" : (yaAprobada ? "pending" : "skipped"))), fecha: d.fechaEnvio,
+        url: (yaAprobada && !yaEnviada && !rechazada && !anulada) ? ("flujo5_envio.html?" + qsFlujo5) : null },
       { nombre: "Confirmar recepción de mercadería", responsable: "Mayra Rodríguez (Compras)" + (d.fechaEsperadaMaterial ? " · esperada " + d.fechaEsperadaMaterial : ""),
-        estado: rechazada ? "skipped" : (yaRecibida ? "done" : (yaEnviada ? "pending" : "skipped")), fecha: d.fechaRecibido },
+        estado: rechazada ? "skipped" : (yaRecibida ? "done" : (anulada ? "skipped" : (yaEnviada ? "pending" : "skipped"))), fecha: d.fechaRecibido },
     ];
+    if (anulada) {
+      pasos.push({ nombre: "Orden anulada/cancelada", responsable: "—", estado: "cancelled", fecha: null });
+    }
+    return pasos;
   }
 
   function tagLabel(estado) {
     if (estado === "done") return "Hecho";
     if (estado === "pending") return "Pendiente";
     if (estado === "rejected") return "Rechazado";
+    if (estado === "cancelled") return "Anulada";
     return "No aplica aún";
   }
   function dotIcon(estado) {
     if (estado === "done") return "✓";
     if (estado === "rejected") return "✕";
+    if (estado === "cancelled") return "✕";
     if (estado === "pending") return "⏳";
     return "–";
   }
@@ -800,7 +820,7 @@
     const mesF = document.getElementById('filtroMesOc').value;
 
     const filtrado = DATA_OC.filter(d =>
-      d.etapa !== "Mercadería Entregada" &&
+      d.etapa !== "Mercadería Entregada" && d.etapa !== "Anulada/Cancelada" &&
       (!buscar || d.convId.toLowerCase().includes(buscar) || (d.numeroPO || '').toLowerCase().includes(buscar) || d.solicitante.toLowerCase().includes(buscar)) &&
       (!etapaF || d.etapa === etapaF) &&
       (!urgF || d.categoria === urgF) &&
@@ -865,9 +885,13 @@
         const [y, m, day] = fechaInput.split('-');
         d.fechaRecibido = `${day}/${m}/${y}`;
         d.etapa = "Mercadería Entregada";
-        renderOc();
-        renderOcProcesadas();
         switchTab('oc-procesadas');
+        try {
+          renderOc();
+          renderOcProcesadas();
+        } catch (err) {
+          console.error("Error al refrescar las tablas tras confirmar recepción:", err);
+        }
       });
     });
   }
@@ -876,9 +900,10 @@
     const buscar = document.getElementById('buscarOcProc').value.trim().toLowerCase();
     const solF = document.getElementById('filtroSolicitanteOcProc').value;
     const mesF = document.getElementById('filtroMesOcProc').value;
+    const etapaF = document.getElementById('filtroEtapaOcProc').value;
 
     const filtrado = DATA_OC.filter(d =>
-      d.etapa === "Mercadería Entregada" &&
+      (etapaF ? d.etapa === etapaF : (d.etapa === "Mercadería Entregada" || d.etapa === "Anulada/Cancelada")) &&
       (!buscar || d.convId.toLowerCase().includes(buscar) || (d.numeroPO || '').toLowerCase().includes(buscar) || d.solicitante.toLowerCase().includes(buscar)) &&
       (!solF || d.solicitante === solF) &&
       (!mesF || mesAnioDeFecha(d.fecha) === mesF)
@@ -927,7 +952,7 @@
     document.getElementById(id).addEventListener('input', renderOc);
     document.getElementById(id).addEventListener('change', renderOc);
   });
-  ['buscarOcProc','filtroMesOcProc','filtroSolicitanteOcProc'].forEach(id => {
+  ['buscarOcProc','filtroMesOcProc','filtroEtapaOcProc','filtroSolicitanteOcProc'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderOcProcesadas);
     document.getElementById(id).addEventListener('change', renderOcProcesadas);
   });
