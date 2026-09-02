@@ -311,6 +311,7 @@
   let DATA_OC = [];
 
   const URL_FLUJO_DASHBOARD = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/04/workflows/a942c6538f94480a91cd1599080f404e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aWNKSYUYC7kFCx6Gd9kjoiEnaf-X25UciKQ3UGAZwhw";
+  const URL_FLUJO_CANCELAR_OC = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/c6774ebf3d084ab99addb59835d12d4a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L6H9lQhAC0mOwchU_yqYlNB1o4CphgPqRMdG19DjNYA";
 
   // Mismo trigger que usa flujo1_solicitud.html — al reutilizarlo, la OC generada desde
   // el dashboard sigue exactamente el mismo camino (Excel + correo a Nicolás) que la manual.
@@ -925,18 +926,41 @@
     });
 
     wrap.querySelectorAll('[data-confirmar-cancelar]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const i = btn.dataset.confirmarCancelar;
         const d = filtrado[i];
         if (!confirm('¿Confirmas que quieres anular/cancelar esta orden?')) return;
-        d.etapa = "Anulada/Cancelada";
-        switchTab('oc-procesadas');
+
+        const motivo = (document.getElementById('oc-motivocancelar-' + i) || {}).value || '';
+        btn.disabled = true;
+        btn.textContent = 'Cancelando...';
+
         try {
-          renderOc();
-          renderOcProcesadas();
+          const resp = await fetch(URL_FLUJO_CANCELAR_OC, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ convId: d.convId, motivo: motivo })
+          });
+          if (!resp.ok) throw new Error("Respuesta no válida: " + resp.status);
+
+          d.etapa = "Anulada/Cancelada";
+          d.motivoCancelacion = motivo || null;
+          const hoy = new Date();
+          d.fechaCancelacion = String(hoy.getDate()).padStart(2, '0') + '/' + String(hoy.getMonth() + 1).padStart(2, '0') + '/' + hoy.getFullYear();
+
+          switchTab('oc-procesadas');
+          try {
+            renderOc();
+            renderOcProcesadas();
+          } catch (err) {
+            console.error("Error al refrescar las tablas tras cancelar la orden:", err);
+          }
         } catch (err) {
-          console.error("Error al refrescar las tablas tras cancelar la orden:", err);
+          console.error("Error al cancelar la orden en el flujo:", err);
+          alert("No se pudo cancelar la orden. Intenta de nuevo en un momento.");
+          btn.disabled = false;
+          btn.textContent = 'Confirmar cancelación';
         }
       });
     });
