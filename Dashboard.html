@@ -122,6 +122,10 @@
     padding: 10px 18px; border: none; border-radius: 7px; background: var(--green-deep); color: #fff;
     font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;
   }
+  .btn-cancelar-oc {
+    padding: 10px 18px; border: 1px solid var(--danger); border-radius: 7px; background: #fff; color: var(--danger);
+    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
   .oc-gen-panel { display: none; margin-top: 14px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
   .oc-gen-panel.show { display: block; }
   .oc-gen-panel .oc-field { margin-bottom: 12px; }
@@ -378,7 +382,9 @@
         fechaAprobacion: excelSerialADate(d.FechaAprobacion),
         fechaEnvio: excelSerialADate(d.FechaEnvio),
         fechaEsperadaMaterial: excelSerialADate(d.FechaEntregaEsperada),
-        fechaRecibido: excelSerialADate(d.FechaRecepcionReal)
+        fechaRecibido: excelSerialADate(d.FechaRecepcionReal),
+        motivoCancelacion: d.MotivoCancelacion || null,
+        fechaCancelacion: excelSerialADate(d.FechaCancelacion)
       }));
     } catch (e) {
       console.error("No se pudo cargar el flujo de Power Automate:", e);
@@ -812,6 +818,20 @@
     </div>`;
   }
 
+  function renderCancelarTrigger(d, i) {
+    if (["Mercadería Entregada", "Anulada/Cancelada", "Rechazada"].includes(d.etapa)) return '';
+    return `<div class="oc-block">
+      <button type="button" class="btn-cancelar-oc" data-abrir-cancelar="${i}">Cancelar orden</button>
+      <div class="oc-gen-panel" id="oc-cancelar-${i}">
+        <div class="oc-field">
+          <label>Motivo de la cancelación (opcional)</label>
+          <input type="text" id="oc-motivocancelar-${i}" placeholder="Ej. Proveedor sin stock, proyecto suspendido...">
+        </div>
+        <button type="button" class="btn-cancelar-oc" style="width:100%;background:var(--danger);color:#fff;border:none;" data-confirmar-cancelar="${i}">Confirmar cancelación</button>
+      </div>
+    </div>`;
+  }
+
   function renderOc() {
     const buscar = document.getElementById('buscarOc').value.trim().toLowerCase();
     const etapaF = document.getElementById('filtroEtapaOc').value;
@@ -852,6 +872,7 @@
             <div class="detail-title">Ruta de ${d.convId}${d.numeroPO ? ' · PO ' + d.numeroPO : ''}</div>
             ${renderTimeline(pasosOc(d))}
             ${renderRecepcionTrigger(d, i)}
+            ${renderCancelarTrigger(d, i)}
           </div>
         </td>
       </tr>`).join('') + `</tbody></table>`;
@@ -894,6 +915,31 @@
         }
       });
     });
+
+    wrap.querySelectorAll('[data-abrir-cancelar]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('oc-cancelar-' + btn.dataset.abrirCancelar).classList.add('show');
+        btn.style.display = 'none';
+      });
+    });
+
+    wrap.querySelectorAll('[data-confirmar-cancelar]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const i = btn.dataset.confirmarCancelar;
+        const d = filtrado[i];
+        if (!confirm('¿Confirmas que quieres anular/cancelar esta orden?')) return;
+        d.etapa = "Anulada/Cancelada";
+        switchTab('oc-procesadas');
+        try {
+          renderOc();
+          renderOcProcesadas();
+        } catch (err) {
+          console.error("Error al refrescar las tablas tras cancelar la orden:", err);
+        }
+      });
+    });
   }
 
   function renderOcProcesadas() {
@@ -914,7 +960,7 @@
     if (!filtrado.length) { wrap.innerHTML = '<div class="empty">Todavía no hay órdenes procesadas.</div>'; return; }
 
     wrap.innerHTML = `<table><thead><tr>
-      <th>Folio</th><th>PO</th><th>Solicitante</th><th>Proveedor</th><th>Descripción</th><th>Fecha</th><th>Recibido</th><th>Etapa actual</th>
+      <th>Folio</th><th>PO</th><th>Solicitante</th><th>Proveedor</th><th>Descripción</th><th>Fecha</th><th>Recibido / Cancelado</th><th>Etapa actual</th>
     </tr></thead><tbody>` + filtrado.map((d, i) => `
       <tr class="clickable" data-toggle="ocp-${i}">
         <td data-label="Folio"><span class="folio">${d.convId}</span></td>
@@ -923,7 +969,7 @@
         <td data-label="Proveedor" class="muted">${d.proveedor || "—"}</td>
         <td data-label="Descripción" class="desc">${d.descripcion}</td>
         <td data-label="Fecha" class="muted">${d.fecha}</td>
-        <td data-label="Recibido" class="muted">${d.fechaRecibido || "—"}</td>
+        <td data-label="Recibido / Cancelado" class="muted">${d.etapa === "Anulada/Cancelada" ? (d.fechaCancelacion || "—") : (d.fechaRecibido || "—")}</td>
         <td data-label="Etapa actual"><span class="badge ${stageClassOc(d.etapa)}">${d.etapa}</span></td>
       </tr>
       <tr class="detail-row" id="ocp-${i}" style="display:none;">
@@ -931,6 +977,7 @@
           <div class="detail-inner">
             <div class="detail-title">Ruta de ${d.convId}${d.numeroPO ? ' · PO ' + d.numeroPO : ''}</div>
             ${renderTimeline(pasosOc(d))}
+            ${d.etapa === "Anulada/Cancelada" && d.motivoCancelacion ? `<div class="detail-title" style="margin-top:14px;">Motivo de cancelación</div><div class="desc">${d.motivoCancelacion}</div>` : ''}
           </div>
         </td>
       </tr>`).join('') + `</tbody></table>`;
