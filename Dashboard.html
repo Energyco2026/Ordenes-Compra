@@ -312,6 +312,7 @@
 
   const URL_FLUJO_DASHBOARD = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/04/workflows/a942c6538f94480a91cd1599080f404e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aWNKSYUYC7kFCx6Gd9kjoiEnaf-X25UciKQ3UGAZwhw";
   const URL_FLUJO_CANCELAR_OC = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/c6774ebf3d084ab99addb59835d12d4a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L6H9lQhAC0mOwchU_yqYlNB1o4CphgPqRMdG19DjNYA";
+  const URL_FLUJO_CONFIRMAR_RECEPCION = "https://defaultb2cce9a6443f42c7b085d80d2fb83b.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/ae68dec0b84147daae296c65edc9d287/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=apLcjRu89FUcUsy2B9N5J8Y-C-RuiUYqjKMk6nbx2Dg";
 
   // Mismo trigger que usa flujo1_solicitud.html — al reutilizarlo, la OC generada desde
   // el dashboard sigue exactamente el mismo camino (Excel + correo a Nicolás) que la manual.
@@ -895,7 +896,7 @@
     });
 
     wrap.querySelectorAll('[data-confirmar-recepcion]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const i = btn.dataset.confirmarRecepcion;
         const d = filtrado[i];
@@ -904,15 +905,32 @@
           alert('Indica la fecha en que se recibió la mercadería.');
           return;
         }
-        const [y, m, day] = fechaInput.split('-');
-        d.fechaRecibido = `${day}/${m}/${y}`;
-        d.etapa = "Mercadería Entregada";
-        switchTab('oc-procesadas');
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+
         try {
-          renderOc();
-          renderOcProcesadas();
+          const resp = await fetch(URL_FLUJO_CONFIRMAR_RECEPCION, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ convId: d.convId, fechaRecibido: fechaInput })
+          });
+          if (!resp.ok) throw new Error("Respuesta no válida: " + resp.status);
+
+          const [y, m, day] = fechaInput.split('-');
+          d.fechaRecibido = `${day}/${m}/${y}`;
+          d.etapa = "Mercadería Entregada";
+          switchTab('oc-procesadas');
+          try {
+            renderOc();
+            renderOcProcesadas();
+          } catch (err) {
+            console.error("Error al refrescar las tablas tras confirmar recepción:", err);
+          }
         } catch (err) {
-          console.error("Error al refrescar las tablas tras confirmar recepción:", err);
+          console.error("Error al confirmar la recepción en el flujo:", err);
+          alert("No se pudo confirmar la recepción. Intenta de nuevo en un momento.");
+          btn.disabled = false;
+          btn.textContent = 'Confirmar recepción';
         }
       });
     });
